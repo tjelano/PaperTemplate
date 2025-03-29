@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SignInButton, useAuth } from "@clerk/clerk-react"
+import { SignInButton, SignUpButton, useAuth } from "@clerk/clerk-react"
 import { useQuery } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { Button } from '../components/ui/button'
@@ -25,15 +25,22 @@ function Dashboard() {
       <div className="max-w-5xl mx-auto px-6 py-12">
         {!isSignedIn ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <h2 className="text-2xl font-semibold text-center mb-6">Sign in to view your gallery</h2>
-            <p className="text-neutral-600 mb-8 text-center max-w-md">
-              Sign in to access your cartoon image gallery and view all your transformations.
+            <h2 className="text-2xl font-semibold text-center mb-6">Access your gallery</h2>
+            <p className="text-neutral-600 mb-4 text-center max-w-md">
+              Sign in or create an account to access your cartoon image gallery.
             </p>
-            <SignInButton mode="modal" >
-              <Button>
-                Sign In
-              </Button>
-            </SignInButton>
+            <div className="flex gap-4">
+              <SignInButton mode="modal">
+                <Button variant="default">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button variant="outline">
+                  Create Account
+                </Button>
+              </SignUpButton>
+            </div>
           </div>
         ) : (
           <>
