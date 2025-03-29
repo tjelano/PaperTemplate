@@ -44,6 +44,7 @@ export default function CartoonHero() {
   const storeUser = useMutation(api.files.storeUser)
   
   // Get user's credit status
+  const userCreditsStatus = useQuery(api.transactions.getUserCreditsStatus)
 
   // Get image details from the database
   const imageDetails = useQuery(
@@ -92,7 +93,19 @@ export default function CartoonHero() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !isSignedIn) return
+    if (!file) return
+    
+    // Check if user is authenticated
+    if (!isSignedIn) {
+      setUploadError("Please sign in to generate cartoon images")
+      return
+    }
+    
+    // Check if user has enough credits
+    if (userCreditsStatus && userCreditsStatus.remainingCredits <= 0) {
+      setUploadError("Please purchase more credits to continue.")
+      return
+    }
 
     setIsProcessing(true)
     setUploadError(null)
@@ -209,8 +222,22 @@ export default function CartoonHero() {
                       <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
                     ) : (
                       <div 
-                        className="flex h-full w-full flex-col items-center justify-center p-4 cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
+                        className="flex h-full w-full flex-col items-center justify-center p-6 cursor-pointer"
+                        onClick={() => {
+                          // Check if user is authenticated
+                          if (!isSignedIn) {
+                            setUploadError("Please sign in to generate cartoon images")
+                            return
+                          }
+                          
+                          // Check if user has enough credits
+                          if (userCreditsStatus && userCreditsStatus.remainingCredits <= 0) {
+                            setUploadError("Please purchase more credits to continue.")
+                            return
+                          }
+                          
+                          fileInputRef.current?.click()
+                        }}
                         onDragOver={(e: DragEvent<HTMLDivElement>) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -230,7 +257,17 @@ export default function CartoonHero() {
                           e.stopPropagation();
                           e.currentTarget.classList.remove('bg-[var(--color-primary)]/5');
                           
-                          if (!isSignedIn) return;
+                          // Check if user is authenticated
+                          if (!isSignedIn) {
+                            setUploadError("Please sign in to generate cartoon images")
+                            return
+                          }
+                          
+                          // Check if user has enough credits
+                          if (userCreditsStatus && userCreditsStatus.remainingCredits <= 0) {
+                            setUploadError("Please purchase more credits to continue.")
+                            return
+                          }
                           
                           const files = e.dataTransfer.files;
                           if (files && files.length > 0) {
