@@ -29,7 +29,7 @@ function Dashboard() {
             <p className="text-neutral-600 mb-8 text-center max-w-md">
               Sign in to access your cartoon image gallery and view all your transformations.
             </p>
-            <SignInButton mode="modal">
+            <SignInButton mode="modal" >
               <Button>
                 Sign In
               </Button>
