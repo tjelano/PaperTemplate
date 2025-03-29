@@ -1,7 +1,6 @@
 import { ConvexError, v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
-import { ImageGen } from "./image";
-import { api, internal } from "./_generated/api";
 
 // Generate a signed upload URL
 export const generateUploadUrl = mutation({
