@@ -19,42 +19,42 @@ export function Credits({ price }: any) {
   }, [getImageCheckoutUrl, price.id]);
 
   return (
-    <div className="group border relative rounded-[32px] bg-white p-8 transition-all hover:scale-[1.01] hover:shadow-lg">
+    <div className="group border relative rounded-[32px] bg-white p-8 transition-all hover:scale-[1.01] hover:shadow-lg ">
       {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white to-neutral-50 rounded-[32px] -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white to-[var(--color-neutral-50)]  rounded-[32px] -z-10" />
 
-      <div className="inline-flex items-center gap-2 rounded-[20px] bg-[#0066CC]/10 px-4 py-2 mb-6">
-        <span className="text-sm font-medium text-[#0066CC]">
+      <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-6">
+        <span className="text-sm font-medium text-[var(--color-primary)]">
           One-time Purchase
         </span>
       </div>
 
       <div className="space-y-6">
         <div>
-          <h3 className="text-2xl font-semibold text-[#1D1D1F] mb-2">
+          <h3 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-2 font-heading">
             5 Image Generations
           </h3>
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-medium text-[#1D1D1F]">
+            <span className="text-4xl font-medium text-[var(--color-primary)]">
               ${(price.amount / 100).toFixed(2)}
             </span>
           </div>
         </div>
 
-        <p className="text-base text-[#86868B] leading-relaxed">
+        <p className="text-base text-[var(--color-neutral-600)] leading-relaxed">
           One-time payment for 5 cartoon image transformations
         </p>
 
         <ul className="space-y-4">
           <li className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-[#0066CC]" />
-            <span className="text-base text-[#1D1D1F]">
+            <CheckCircle className="w-5 h-5 text-[var(--color-primary)]" />
+            <span className="text-base text-[var(--color-neutral-800)]">
               5 high-quality cartoon transformations
             </span>
           </li>
           <li className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-[#0066CC]" />
-            <span className="text-base text-[#1D1D1F]">
+            <CheckCircle className="w-5 h-5 text-[var(--color-primary)]" />
+            <span className="text-base text-[var(--color-neutral-800)]">
               Download in full resolution
             </span>
           </li>
@@ -63,17 +63,17 @@ export function Credits({ price }: any) {
         {isLoaded && (
           <Authenticated>
             <Button
-              className="w-full h-12 text-base rounded-[14px] bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all"
+              className="w-full h-12 text-base rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
               onClick={handleCheckout}
             >
-              Buy Now
+              Bag these credits
             </Button>
           </Authenticated>
         )}
         <Unauthenticated>
           <SignInButton mode="modal" signUpFallbackRedirectUrl="/">
-            <Button className="w-full h-12 text-base rounded-[14px] bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all">
-              Buy Now
+            <Button className="w-full h-12 text-base rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+              Bag these credits
             </Button>
           </SignInButton>
         </Unauthenticated>

@@ -163,38 +163,38 @@ export default function CartoonHero() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-[var(--color-neutral-50)] ">
       <main className="w-full py-12 px-4">
         {/* Hero Section */}
         <div className="mx-auto max-w-2xl text-center mb-14">
-          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[#0066CC]/10 px-4 py-2 mb-6">
-            <span className="text-sm font-medium text-[#0066CC]">
+          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-6">
+            <span className="text-sm font-medium text-[var(--color-primary)]">
               Transform your photos instantly
             </span>
           </div>
-          <h1 className="text-3xl font-semibold md:text-5xl tracking-tight text-[#1D1D1F]">
-            Transform your photos into cartoons
+          <h1 className="text-3xl font-bold md:text-5xl tracking-tight text-[var(--color-neutral-900)]">
+            Bag yourself a cartoon version in seconds.
           </h1>
-          <p className="mt-6 text-base text-[#86868B] max-w-lg mx-auto leading-relaxed">
-            Minimal, clean, black & white cartoon transformations with our AI technology.
+          <p className="mt-6 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
+            Minimalist cartoon transformations, powered by AI. Clean. Fast. Free.
           </p>
         </div>
 
         {/* Image Transformation Section */}
         <div className="mx-auto max-w-3xl">
-          <div className="relative rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
+          <div className="relative rounded-xl shadow-sm border border-[var(--color-neutral-100)] overflow-hidden card">
             
             {/* Image transformation studio */}
             <div className="relative z-10 py-6">
               {/* Image headers */}
               <div className="flex justify-between mb-2 px-4">
                 <div className="flex items-center pl-5">
-                  <div className="w-2 h-2 rounded-full bg-[#0066CC] mr-2"></div>
-                  <span className="text-sm font-medium text-[#1D1D1F]">Original Photo</span>
+                  <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] mr-2"></div>
+                  <span className="text-sm font-medium text-[var(--color-neutral-800)]">Original Photo</span>
                 </div>
                 <div className="flex items-center pr-5">
-                  <span className="text-sm font-medium text-[#1D1D1F]">Cartoon Version</span>
-                  <div className="w-2 h-2 rounded-full bg-[#0066CC] ml-2"></div>
+                  <span className="text-sm font-medium text-[var(--color-neutral-800)]">Cartoon Version</span>
+                  <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] ml-2"></div>
                 </div>
               </div>
               
@@ -207,11 +207,11 @@ export default function CartoonHero() {
                       <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center p-4">
-                        <div className="bg-blue-50 p-3 rounded-full mb-2">
-                          <ImageIcon className="h-6 w-6 text-[#0066CC]" />
+                        <div className="bg-[var(--color-primary)]/10 p-3 rounded-full mb-2">
+                          <ImageIcon className="h-6 w-6 text-[var(--color-primary)]" />
                         </div>
-                        <p className="text-xs text-[#86868B] font-medium">Upload your photo</p>
-                        <p className="text-xs text-[#86868B] mt-1 max-w-[150px] text-center opacity-80">Use a clear portrait photo</p>
+                        <p className="text-xs text-[var(--color-neutral-700)] font-medium">Drop your photo</p>
+                        <p className="text-xs text-[var(--color-neutral-500)] mt-1 max-w-[150px] text-center opacity-80">Use a clear portrait photo</p>
                       </div>
                     )}
                   </div>
@@ -219,7 +219,7 @@ export default function CartoonHero() {
                 
                 {/* Middle - Transformation arrow */}
                 <div className="flex items-center justify-center mx-2">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#0066CC] text-white">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-primary)] text-white shadow-md">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -237,11 +237,11 @@ export default function CartoonHero() {
                       />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center p-4">
-                        <div className="bg-blue-50 p-3 rounded-full mb-2">
-                          <Sparkles className="h-6 w-6 text-[#0066CC]" />
+                        <div className="bg-[var(--color-accent)]/10 p-3 rounded-full mb-2">
+                          <Sparkles className="h-6 w-6 text-[var(--color-accent)]" />
                         </div>
-                        <p className="text-xs text-[#86868B] font-medium">Cartoon result</p>
-                        <p className="text-xs text-[#86868B] mt-1 max-w-[150px] text-center opacity-80">Result will appear here</p>
+                        <p className="text-xs text-[var(--color-neutral-700)] font-medium">Cartoon result</p>
+                        <p className="text-xs text-[var(--color-neutral-500)] mt-1 max-w-[150px] text-center opacity-80">Your slick cartoon will appear here</p>
                         {uploadError && (
                           <p className="mt-2 text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{uploadError}</p>
                         )}
@@ -251,8 +251,8 @@ export default function CartoonHero() {
                     {isProcessing && (
                       <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-xl">
                         <div className="flex flex-col items-center">
-                          <div className="h-8 w-8 border-2 border-t-[#0066CC] border-r-[#0066CC]/20 border-b-[#0066CC]/20 border-l-[#0066CC]/20 rounded-full animate-spin"></div>
-                          <p className="text-xs mt-2 font-medium text-[#1D1D1F] bg-white px-3 py-0.5 rounded-full">Processing...</p>
+                          <div className="h-8 w-8 border-2 border-t-[var(--color-primary)] border-r-[var(--color-primary)]/20 border-b-[var(--color-primary)]/20 border-l-[var(--color-primary)]/20 rounded-full animate-spin"></div>
+                          <p className="text-xs mt-2 font-medium text-[var(--color-neutral-800)] bg-white px-3 py-0.5 rounded-full shadow-sm">Working on it...</p>
                         </div>
                       </div>
                     )}
@@ -266,24 +266,24 @@ export default function CartoonHero() {
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                   <Button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 h-10 text-xs font-medium rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all"
+                    className="flex-1 h-12 text-xs font-medium rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
                     disabled={!isSignedIn || isProcessing}
                   >
-                    <Upload className="mr-1.5 h-4 w-4" /> Upload
+                    <Upload className="mr-1.5 h-4 w-4" /> Drop your photo
                   </Button>
 
                   <Button
                     onClick={handleCartoonify}
                     disabled={!isSignedIn || !image || isProcessing}
-                    className="flex-1 h-10 text-xs font-medium rounded-lg bg-[#8BB4F7] hover:bg-[#7CAAFC] text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-12 text-xs font-medium rounded-xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                   >
-                    <Sparkles className="mr-1.5 h-4 w-4" /> Transform
+                    <Sparkles className="mr-1.5 h-4 w-4" /> Make it a cartoon
                   </Button>
 
                   {cartoonImage && (
                     <Button
                       variant="outline"
-                      className="flex-1 h-10 text-xs font-medium rounded-lg border-[#0066CC]/30 hover:bg-[#0066CC]/5 text-[#0066CC] hover:text-[#0066CC] shadow-sm transition-all"
+                      className="flex-1 h-12 text-xs font-medium rounded-xl border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
                       onClick={() => window.open(cartoonImage, "_blank")}
                     >
                       <Download className="mr-1.5 h-4 w-4" /> Download
@@ -295,18 +295,18 @@ export default function CartoonHero() {
           </div>
 
           {!isSignedIn && (
-            <div className="mt-8 text-center bg-white rounded-2xl p-6 shadow-sm max-w-md mx-auto border border-neutral-100">
-              <div className="mb-3 mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+            <div className="mt-8 text-center bg-white rounded-2xl p-6 shadow-md max-w-md mx-auto border border-[var(--color-neutral-100)] card">
+              <div className="mb-3 mx-auto w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#0066CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="#0066CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-[#1D1D1F] mb-2">Sign in to continue</h3>
-              <p className="text-sm text-[#86868B] mb-4">Create an account to access all premium features</p>
+              <h3 className="text-xl font-medium text-[var(--color-neutral-800)] mb-2">Bag yourself an account</h3>
+              <p className="text-sm text-[var(--color-neutral-600)] mb-4">Create an account to access all premium features</p>
               <SignInButton mode="modal" fallbackRedirectUrl="/">
                 <Button
-                  className="h-12 px-6 text-sm font-medium rounded-xl bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all hover:shadow-md w-full"
+                  className="h-12 px-6 text-sm font-medium rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 w-full"
                 >
                   Sign In
                 </Button>
@@ -316,16 +316,16 @@ export default function CartoonHero() {
         </div>
         {/* Pricing Section */}
         <div className="text-center mx-auto max-w-2xl mb-12 mt-16">
-          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[#0066CC]/10 px-4 py-2 mb-6">
-            <span className="text-sm font-medium text-[#0066CC]">
+          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-6">
+            <span className="text-sm font-medium text-[var(--color-primary)]">
               Choose Your Plan
             </span>
           </div>
-          <h2 className="text-3xl font-semibold tracking-tight text-[#1D1D1F]">
-            Simple, Transparent Pricing
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-neutral-900)]">
+            No Frills. Just Cartoons.
           </h2>
-          <p className="mt-4 text-base text-[#86868B] max-w-lg mx-auto leading-relaxed">
-            Get unlimited access to our AI cartoon transformation technology with our flexible pricing options.
+          <p className="mt-4 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
+            Get unlimited access to our AI cartoon transformation technology with our simple pricing options.
           </p>
         </div>
         
