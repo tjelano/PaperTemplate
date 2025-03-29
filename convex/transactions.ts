@@ -31,7 +31,7 @@ const createCheckout = async ({
     }
 
     const polar = new Polar({
-        server: "sandbox",
+        server: process.env.FRONTEND_URL?.endsWith(".fyi") ? "production" : "sandbox",
         accessToken: process.env.POLAR_ACCESS_TOKEN,
     });
 
@@ -55,7 +55,7 @@ const createCheckout = async ({
 export const getPlansPolar = action({
     handler: async () => {
         const polar = new Polar({
-            server: "sandbox",
+            server: process.env.FRONTEND_URL?.endsWith(".fyi") ? "production" : "sandbox",
             accessToken: process.env.POLAR_ACCESS_TOKEN,
         });
 
@@ -431,7 +431,7 @@ export const getUserDashboardUrl = action({
     },
     handler: async (_, args) => {
         const polar = new Polar({
-            server: "sandbox",
+            server: process.env.FRONTEND_URL?.endsWith(".fyi") ? "production" : "sandbox",
             accessToken: process.env.POLAR_ACCESS_TOKEN,
         });
 

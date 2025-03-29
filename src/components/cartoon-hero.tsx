@@ -19,17 +19,29 @@ export default function CartoonHero() {
   const { addToast } = useToast();
 
 
+  // Plans fetch - only try once and handle errors gracefully
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchPlans = async () => {
       try {
         const plansData = await getPlansAction();
-        setPlans(plansData);
+        if (isMounted) {
+          setPlans(plansData);
+        }
       } catch (error) {
-        console.error("Error fetching plans:", error);
+        // Log the error but don't keep retrying - this prevents repeated error messages
+        console.error("Error fetching plans - authentication may be expired:", error);
       }
     };
+    
     fetchPlans();
-  }, [getPlansAction]);
+    
+    return () => {
+      isMounted = false;
+    };
+  // Empty dependency array prevents continuous retries
+  }, []);
 
 
   // We'll use messages to trigger cartoonification instead of extracting images directly
