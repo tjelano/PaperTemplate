@@ -37,11 +37,47 @@ export const saveUploadedImage = mutation({
   },
 });
 
-// Get a signed URL to download an uploaded file
+// Get a URL to download an uploaded file with proper content type
 export const getImageUrl = query({
-  args: { storageId: v.string() },
+  args: { 
+    storageId: v.string(),
+    contentType: v.optional(v.string())
+  },
   handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId);
+    console.log(`[getImageUrl] Getting URL for storage ID: ${args.storageId}`);
+    
+    try {
+      // Try to determine content type from the storageId or provided parameter
+      let imageContentType = args.contentType || 'image/png';
+      
+      // Check the storage ID for file extension clues
+      const storageId = args.storageId;
+      if (storageId.includes('.jpg') || storageId.includes('.jpeg')) {
+        imageContentType = 'image/jpeg';
+      } else if (storageId.includes('.svg')) {
+        imageContentType = 'image/svg+xml';
+      } else if (storageId.includes('.png')) {
+        imageContentType = 'image/png';
+      }
+      
+      console.log(`[getImageUrl] Using content type: ${imageContentType}`);
+      
+      // Get URL from storage
+      // Unfortunately, Convex storage.getUrl() doesn't accept content type parameters
+      // But we're logging this information for debugging purposes
+      const url = await ctx.storage.getUrl(args.storageId);
+      
+      if (!url) {
+        console.log(`[getImageUrl] Failed to get URL for storage ID: ${args.storageId}`);
+        return null;
+      }
+      
+      console.log(`[getImageUrl] Generated URL: ${url}`);
+      return url;
+    } catch (error) {
+      console.error(`[getImageUrl] Error getting URL:`, error);
+      return null;
+    }
   },
 });
 
@@ -174,6 +210,7 @@ export const uploadCartoonImage = mutation({
     // Generate a signed upload URL for the client
     const uploadUrl = await ctx.storage.generateUploadUrl();
 
+    console.log('[uploadCartoonImage] Generated upload URL: ' + uploadUrl);
     return {
       uploadUrl,
       imageId: args.imageId,

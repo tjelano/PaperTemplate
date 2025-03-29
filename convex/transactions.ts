@@ -260,9 +260,6 @@ export const paymentWebhookHandler = mutation({
                 data: JSON.stringify(args.body.data),
             });
 
-            console.log('event type', eventType)
-            console.log('metadata', args.body.data.metadata)
-
             // Handle successful one-time payments
             if (eventType === 'order.updated') {
                 // Extract metadata from the order

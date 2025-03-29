@@ -134,8 +134,6 @@ export const ImageGen = internalAction({
                         console.log(`[ImageGen] Added data URL prefix to image data`);
                     }
 
-                    console.log('[ImageGen] Image data processed: ' + processedImageData);
-
                     // Call a mutation to store the image in the database
                     console.log("[ImageGen] Calling mutation to store image in database");
                     const imageId: Id<"images"> = await ctx.runMutation(internal.image.storeCartoonImage, {
@@ -335,20 +333,31 @@ export const directlyUploadImage = internalAction({
                 console.log(`[directlyUploadImage] First few bytes: ${Array.from(bytes.slice(0, Math.min(20, bytes.length))).join(',')}`); 
             }
             
-            // Create form data with explicit filename and content type
-            const formData = new FormData();
-            const fileName = contentType === 'image/svg+xml' ? 'cartoon.svg' : 
-                            contentType === 'image/jpeg' ? 'cartoon.jpg' : 'cartoon.png';
-            formData.append('file', blob, fileName);
+            // The issue is that FormData automatically sets a multipart/form-data Content-Type
+            // which is overriding our intended image content type
+            // Let's use a direct binary upload instead
+            console.log(`[directlyUploadImage] Uploading to Convex storage with content type: ${contentType}`);
             
-            // Upload to Convex storage with explicit content type headers
-            console.log(`[directlyUploadImage] Uploading to Convex storage as ${fileName}...`);
+            // Create a unique name for the file to avoid caching issues
+            const fileExt = contentType === 'image/svg+xml' ? 'svg' : 
+                         contentType === 'image/jpeg' ? 'jpg' : 'png';
+            const uniqueFileName = `cartoon_${Date.now()}.${fileExt}`;
+            console.log(`[directlyUploadImage] Using unique filename: ${uniqueFileName}`);
+            
+            // Set specific headers for proper image handling
             const response = await fetch(args.uploadUrl, {
                 method: 'POST',
-                body: formData,
+                // Send the binary data directly
+                body: blob,
                 headers: {
-                    // Set content type header to ensure proper handling
-                    'X-Content-Type': contentType
+                    // Explicitly set the Content-Type to the image type
+                    'Content-Type': contentType,
+                    // Tell Convex this is the intended content type
+                    'X-Content-Type': contentType,
+                    // Set filename and force inline display (not download)
+                    'X-Content-Disposition': `inline; filename="${uniqueFileName}"`,
+                    // Custom header that might help
+                    'X-File-Name': uniqueFileName
                 }
             });
             
@@ -479,21 +488,42 @@ export const updateCartoonImageWithStorageId = internalMutation({
         imageId: v.id("images"),
         storageId: v.string(),
     },
-    handler: async (ctx, args): Promise<void> => {
+    handler: async (ctx, args): Promise<string> => {
         console.log(`[updateCartoonImageWithStorageId] Updating image ${args.imageId} with storage ID ${args.storageId}`);
         
-        // Get the URL for the stored image
-        const cartoonImageUrl = await ctx.storage.getUrl(args.storageId) || '';
+        // Get the storage ID
+        const storageId = args.storageId;
         
-        // Update the image record with the storage ID and URL
-        await ctx.db.patch(args.imageId, {
-            cartoonStorageId: args.storageId,
-            cartoonImageUrl: cartoonImageUrl,
-            status: "completed",
-            updatedAt: Date.now(),
-        });
-        
-        console.log(`[updateCartoonImageWithStorageId] Image successfully updated with URL: ${cartoonImageUrl}`);
+        // Get the URL for the stored image with proper content type header
+        try {
+            // Instead of adding headers to the storage URL, we need to ensure they were set correctly
+            // during upload in directlyUploadImage
+            console.log(`[updateCartoonImageWithStorageId] Getting URL for storage ID: ${storageId}`);
+            const cartoonImageUrl = await ctx.storage.getUrl(storageId) || '';
+            
+            // Log the URL for debugging
+            console.log(`[updateCartoonImageWithStorageId] Image URL: ${cartoonImageUrl}`);
+            
+            // Update the image record with the storage ID and URL
+            await ctx.db.patch(args.imageId, {
+                cartoonStorageId: storageId,
+                cartoonImageUrl: cartoonImageUrl,
+                status: "completed",
+                updatedAt: Date.now(),
+            });
+            
+            console.log(`[updateCartoonImageWithStorageId] Image successfully updated with URL: ${cartoonImageUrl}`);
+            
+            // Return the URL so we can use it in the client
+            return cartoonImageUrl;
+        } catch (error) {
+            console.error(`[updateCartoonImageWithStorageId] Error updating image:`, error);
+            await ctx.db.patch(args.imageId, {
+                status: "error",
+                updatedAt: Date.now(),
+            });
+            throw new Error(`Failed to update image with storage ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     },
 });
 

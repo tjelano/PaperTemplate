@@ -42,7 +42,6 @@ export default function CartoonHero() {
   const saveUploadedImage = useMutation(api.files.saveUploadedImage)
   const cartoonifyImage = useMutation(api.files.cartoonifyImage)
   const storeUser = useMutation(api.files.storeUser)
-  const updateImageWithStorageId = useMutation(api.files.updateImageWithStorageId)
 
   // Get image details from the database
   const imageDetails = useQuery(
@@ -79,10 +78,6 @@ export default function CartoonHero() {
         // but the actual data is too large to store in the database
         console.log("Image is still being processed, waiting for completion...");
         setIsProcessing(true);
-      } else if (imageDetails.status === "needs_client_upload") {
-        // Handle images that need client-side upload
-        console.log("Image needs client-side upload, fetching the data...");
-        handleClientUpload(imageDetails);
       } else if (imageDetails.status === "error") {
         console.error("Error processing image");
         setIsProcessing(false);
@@ -91,66 +86,7 @@ export default function CartoonHero() {
     }
   }, [imageDetails])
   
-  // Handle client-side upload for images marked as needs_client_upload
-  const handleClientUpload = async (imageDetails: any) => {
-    try {
-      console.log("Starting client-side upload process for image", imageDetails._id);
-      setIsProcessing(true);
-      
-      // Generate a new upload URL
-      const uploadUrl = await generateUploadUrl();
-      if (!uploadUrl) {
-        throw new Error("Failed to generate upload URL");
-      }
-      
-      // Fetch the actual image data
-      const imageResponse = await fetch(imageDetails.originalImageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to fetch original image: ${imageResponse.status}`);
-      }
-      
-      // Get the image blob
-      const imageBlob = await imageResponse.blob();
-      
-      // Upload to Convex storage
-      const formData = new FormData();
-      formData.append('file', imageBlob, 'cartoon.png');
-      
-      console.log("Uploading cartoon image to Convex storage...");
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.status}`);
-      }
-      
-      // Get the storage ID
-      const result = await uploadResponse.json();
-      if (!result.storageId) {
-        throw new Error("No storage ID returned");
-      }
-      
-      // Update the image record
-      console.log("Updating image record with storage ID:", result.storageId);
-      const updatedUrl = await updateImageWithStorageId({
-        imageId: imageDetails._id,
-        storageId: result.storageId
-      });
-      
-      console.log("Image updated with URL:", updatedUrl);
-      if (updatedUrl) {
-        setCartoonImage(updatedUrl);
-      }
-      
-      setIsProcessing(false);
-    } catch (error) {
-      console.error("Error in client-side upload:", error);
-      setIsProcessing(false);
-      setUploadError("Failed to process image. Please try again.");
-    }
-  }
+  // We don't need the handleUploadCartoonImage function anymore since we're not storing base64 data in the database
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -379,23 +315,56 @@ export default function CartoonHero() {
                   />
     
 
-                  {/* <Button
-                    onClick={handleCartoonify}
-                    disabled={!isSignedIn || !image || isProcessing}
-                    className="flex-1 h-12 text-md rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden group"
-                  >
-                    <span className="shimmer-effect"></span>
-                    <ChefHat className="mr-1.5 h-8 w-8 animate-pulse" /> Cook
-                  </Button> */}
 
                   {cartoonImage && (
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-                      onClick={() => window.open(cartoonImage, "_blank")}
-                    >
-                      <Download className="mr-1.5 h-8 w-8" /> Download
-                    </Button>
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                        onClick={() => {
+                          // Download the image - we need to force the correct content type
+                          const link = document.createElement('a');
+                          link.href = cartoonImage || '';
+                          link.download = 'cartoon.png';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                      >
+                        <Download className="mr-1.5 h-5 w-5" /> Download
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        className="h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                        onClick={() => {
+                          // Create a new page with the image embedded directly
+                          // This forces the browser to display it as an image
+                          const imageUrl = cartoonImage || '';
+                          const newWindow = window.open('', '_blank');
+                          if (newWindow) {
+                            newWindow.document.write(`
+                              <!DOCTYPE html>
+                              <html>
+                                <head>
+                                  <title>Cartoon Image</title>
+                                  <style>
+                                    body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }
+                                    img { max-width: 90%; max-height: 90vh; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+                                  </style>
+                                </head>
+                                <body>
+                                  <img src="${imageUrl}" alt="Cartoon Image" />
+                                </body>
+                              </html>
+                            `);
+                            newWindow.document.close();
+                          }
+                        }}
+                      >
+                        View as Image
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
