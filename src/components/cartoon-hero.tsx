@@ -1,8 +1,8 @@
 import { useChat } from "@ai-sdk/react"
 import { SignInButton, useAuth, useUser } from "@clerk/clerk-react"
 import { useAction, useMutation, useQuery } from "convex/react"
-import { Download, ImageIcon, Sparkles, Upload } from "lucide-react"
-import React, { useEffect, useRef, useState } from "react"
+import { ChefHat, Download, Sparkles, Upload } from "lucide-react"
+import React, { DragEvent, useEffect, useRef, useState } from "react"
 import { api } from "../../convex/_generated/api"
 import { Credits } from "./credits"
 import { Button } from "./ui/button"
@@ -206,12 +206,52 @@ export default function CartoonHero() {
                     {image ? (
                       <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center p-4">
+                      <div 
+                        className="flex h-full w-full flex-col items-center justify-center p-4 cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e: DragEvent<HTMLDivElement>) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onDragEnter={(e: DragEvent<HTMLDivElement>) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add('bg-[var(--color-primary)]/5');
+                        }}
+                        onDragLeave={(e: DragEvent<HTMLDivElement>) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('bg-[var(--color-primary)]/5');
+                        }}
+                        onDrop={(e: DragEvent<HTMLDivElement>) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('bg-[var(--color-primary)]/5');
+                          
+                          if (!isSignedIn) return;
+                          
+                          const files = e.dataTransfer.files;
+                          if (files && files.length > 0) {
+                            const file = files[0];
+                            if (file.type.startsWith('image/')) {
+                              // Create a new file input event
+                              const dataTransfer = new DataTransfer();
+                              dataTransfer.items.add(file);
+                              
+                              if (fileInputRef.current) {
+                                fileInputRef.current.files = dataTransfer.files;
+                                const event = new Event('change', { bubbles: true });
+                                fileInputRef.current.dispatchEvent(event);
+                              }
+                            }
+                          }
+                        }}
+                      >
                         <div className="bg-[var(--color-primary)]/10 p-3 rounded-full mb-2">
-                          <ImageIcon className="h-6 w-6 text-[var(--color-primary)]" />
+                          <Upload className="h-6 w-6 text-[var(--color-primary)]" />
                         </div>
-                        <p className="text-xs text-[var(--color-neutral-700)] font-medium">Drop your photo</p>
-                        <p className="text-xs text-[var(--color-neutral-500)] mt-1 max-w-[150px] text-center opacity-80">Use a clear portrait photo</p>
+                        <p className="text-xs text-[var(--color-neutral-700)] font-medium hover:text-[var(--color-primary)]">Drop your photo</p>
+                        <p className="text-xs text-[var(--color-neutral-500)] mt-1 max-w-[150px] text-center opacity-80">or click to upload</p>
                       </div>
                     )}
                   </div>
@@ -263,30 +303,31 @@ export default function CartoonHero() {
               {/* Action buttons row */}
               <div className="mt-4 flex justify-center">
                 <div className="flex gap-2 w-full max-w-md">
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 h-12 text-xs font-medium rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-                    disabled={!isSignedIn || isProcessing}
-                  >
-                    <Upload className="mr-1.5 h-4 w-4" /> Drop your photo
-                  </Button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+    
 
                   <Button
                     onClick={handleCartoonify}
                     disabled={!isSignedIn || !image || isProcessing}
-                    className="flex-1 h-12 text-xs font-medium rounded-xl bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    className="flex-1 h-12 text-md rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden group"
                   >
-                    <Sparkles className="mr-1.5 h-4 w-4" /> Make it a cartoon
+                    <span className="shimmer-effect"></span>
+                    <ChefHat className="mr-1.5 h-8 w-8 animate-pulse" /> Cook
                   </Button>
 
                   {cartoonImage && (
                     <Button
                       variant="outline"
-                      className="flex-1 h-12 text-xs font-medium rounded-xl border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                      className="flex-1 h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
                       onClick={() => window.open(cartoonImage, "_blank")}
                     >
-                      <Download className="mr-1.5 h-4 w-4" /> Download
+                      <Download className="mr-1.5 h-8 w-8" /> Download
                     </Button>
                   )}
                 </div>
