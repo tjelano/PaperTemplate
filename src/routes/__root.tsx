@@ -31,7 +31,7 @@ export const Route = createRootRoute({
             </header>
             <Outlet />
             {/* Footer */}
-            <footer className="border-t border-black/10 py-6 mt-20">
+            <footer className="border-t border-black/10 py-6">
                 <div className="container flex flex-col items-center justify-center gap-4 md:flex-row">
                     <p className="text-center text-xs text-black/60">
                         © 2025 CartoonAI. All rights reserved.
