@@ -8,6 +8,7 @@ export const ImageGen = internalAction({
     args: {
         imageUrl: v.string(),
         userId: v.string(),
+        style: v.string(),
     },
     handler: async (ctx, args): Promise<Id<"images"> | ConvexError<string>> => {
         console.log("[ImageGen] Starting image generation process");
@@ -87,7 +88,7 @@ export const ImageGen = internalAction({
         console.log("[ImageGen] Preparing content for Gemini API");
 
         const contents = [
-            { text: "Turn this image into a simpsons cartoon" },
+            { text: `Turn this image into a ${args.style} style image` },
             {
                 inlineData: {
                     mimeType: 'image/png',
@@ -124,7 +125,7 @@ export const ImageGen = internalAction({
 
                     console.log(`[ImageGen] Image data length: ${imageData.length} characters`);
                     console.log(`[ImageGen] Image data type: ${part.inlineData.mimeType}`);
-                    
+
                     // Sometimes the data doesn't include a proper prefix
                     // Let's ensure it has the correct data: prefix based on the mime type
                     let processedImageData = imageData;
@@ -199,7 +200,7 @@ export const getImageByUrl = internalQuery({
             .query("images")
             .filter(q => q.eq(q.field("originalImageUrl"), args.imageUrl))
             .collect();
-        
+
         return images[0] || null;
     },
 });
@@ -213,21 +214,21 @@ export const updateImageStatus = internalMutation({
     },
     handler: async (ctx, args) => {
         console.log(`[updateImageStatus] Updating image ${args.imageId} to status: ${args.status}`);
-        
+
         // Only update status and timestamp, as errorMessage is not in the schema
         const updateData = {
             status: args.status,
             updatedAt: Date.now(),
         };
-        
+
         // Log the error message but don't store it
         if (args.errorMessage) {
             console.error(`[updateImageStatus] Error for image ${args.imageId}: ${args.errorMessage}`);
         }
-        
+
         await ctx.db.patch(args.imageId, updateData);
         console.log(`[updateImageStatus] Successfully updated image status`);
-        
+
         return { success: true };
     },
 });
@@ -240,14 +241,14 @@ export const directlyUploadImage = internalAction({
     },
     handler: async (ctx, args): Promise<void> => {
         console.log(`[directlyUploadImage] Starting direct upload for image ${args.imageId}`);
-        
+
         try {
             // Create form data for upload
             // In Convex actions, we need to use raw fetch requests
-            
+
             // Convert base64 to binary data - First ensure it's clean base64
             let base64 = args.base64Data;
-            
+
             // If it's a data URL, extract just the base64 part
             if (base64.startsWith('data:')) {
                 const parts = base64.split(',');
@@ -255,11 +256,11 @@ export const directlyUploadImage = internalAction({
                     base64 = parts[1];
                 }
             }
-            
+
             // Use a more reliable base64 to binary conversion
             // This is critical to ensure proper encoding of the image data
             console.log(`[directlyUploadImage] Processing base64 data of length: ${base64.length}`);
-            
+
             // Create a binary string from the base64
             let binaryString = '';
             try {
@@ -268,15 +269,15 @@ export const directlyUploadImage = internalAction({
                 console.error("[directlyUploadImage] Error decoding base64:", e);
                 throw new Error("Invalid base64 data");
             }
-            
+
             // Convert the binary string to a Uint8Array for the blob
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-            
+
             console.log(`[directlyUploadImage] Successfully converted base64 to binary data of length: ${bytes.length}`);
-            
+
             // Verify the data looks valid (check for PNG signature)
             if (bytes.length > 8) {
                 const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10]; // PNG file signature
@@ -293,11 +294,11 @@ export const directlyUploadImage = internalAction({
                     console.log(`[directlyUploadImage] Warning: Data does not have PNG signature, might not be a valid image`);
                 }
             }
-            
+
             // Check the first few bytes to determine the file type correctly
             // This is crucial for ensuring the image displays properly
             let contentType = 'image/png'; // default
-            
+
             if (bytes.length > 4) {
                 // Check for PNG signature (89 50 4E 47) - decimal: 137, 80, 78, 71
                 if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) {
@@ -318,32 +319,32 @@ export const directlyUploadImage = internalAction({
                 const firstBytes = Array.from(bytes.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
                 console.log(`[directlyUploadImage] First 8 bytes: ${firstBytes}`);
             }
-            
+
             console.log(`[directlyUploadImage] Final determined content type: ${contentType}`);
-            
+
             // Create a blob with the detected content type
             const blob = new Blob([bytes], { type: contentType });
-            
+
             // This is serverless so URL.createObjectURL won't work, but we'll log useful info
             console.log(`[directlyUploadImage] Blob size: ${blob.size} bytes`);
             console.log(`[directlyUploadImage] Blob type: ${blob.type}`);
-            
+
             // If the file is small enough, let's log a few bytes to see what we're working with
             if (bytes.length > 0 && bytes.length < 50) {
-                console.log(`[directlyUploadImage] First few bytes: ${Array.from(bytes.slice(0, Math.min(20, bytes.length))).join(',')}`); 
+                console.log(`[directlyUploadImage] First few bytes: ${Array.from(bytes.slice(0, Math.min(20, bytes.length))).join(',')}`);
             }
-            
+
             // The issue is that FormData automatically sets a multipart/form-data Content-Type
             // which is overriding our intended image content type
             // Let's use a direct binary upload instead
             console.log(`[directlyUploadImage] Uploading to Convex storage with content type: ${contentType}`);
-            
+
             // Create a unique name for the file to avoid caching issues
-            const fileExt = contentType === 'image/svg+xml' ? 'svg' : 
-                         contentType === 'image/jpeg' ? 'jpg' : 'png';
+            const fileExt = contentType === 'image/svg+xml' ? 'svg' :
+                contentType === 'image/jpeg' ? 'jpg' : 'png';
             const uniqueFileName = `cartoon_${Date.now()}.${fileExt}`;
             console.log(`[directlyUploadImage] Using unique filename: ${uniqueFileName}`);
-            
+
             // Set specific headers for proper image handling
             const response = await fetch(args.uploadUrl, {
                 method: 'POST',
@@ -360,37 +361,37 @@ export const directlyUploadImage = internalAction({
                     'X-File-Name': uniqueFileName
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
             }
-            
+
             // Get the storage ID from the response
             const result = await response.json();
             const storageId = result.storageId;
-            
+
             console.log(`[directlyUploadImage] Upload successful, storage ID: ${storageId}`);
-            
+
             // Instead of getting the URL, we'll store directly
             // We'll get the URL inside updateCartoonImageWithStorageId
-            
+
             // Update the image record with the storage ID and URL
             // We need to update the record directly since updateImageStatus doesn't accept storageId
             await ctx.runMutation(internal.image.updateCartoonImageWithStorageId, {
                 imageId: args.imageId,
                 storageId: storageId
             });
-            
+
             // Also update the status to completed
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
                 status: "completed"
             });
-            
+
             console.log(`[directlyUploadImage] Image record updated with storage ID: ${storageId}`);
         } catch (error) {
             console.error(`[directlyUploadImage] Error:`, error);
-            
+
             // Update image status to error
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
@@ -409,37 +410,37 @@ export const uploadCartoonImage = internalAction({
     },
     handler: async (ctx, args): Promise<void> => {
         console.log(`[uploadCartoonImage] Starting upload for image ${args.imageId}`);
-        
+
         try {
             // Instead of trying to convert the base64 in the action, 
             // let's simply store a flag in the database and let the client 
             // handle the actual upload
-            
+
             // Get the image data from the database
             const image = await ctx.runQuery(internal.image.getImageById, {
                 imageId: args.imageId
             });
-            
+
             if (!image) {
                 throw new Error(`Image with ID ${args.imageId} not found`);
             }
-            
+
             console.log(`[uploadCartoonImage] Image found, marking as ready for client upload`);
-            
+
             // Update the image record to indicate it needs client-side processing
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
                 status: "needs_client_upload",
                 errorMessage: "Image requires client-side upload"
             });
-            
+
             console.log(`[uploadCartoonImage] Image marked as needs_client_upload`);
-            
+
             // We'll implement a client-side solution instead of trying to do everything server-side
             console.log(`[uploadCartoonImage] Client will handle the upload for image ${args.imageId}`);
         } catch (error) {
             console.error(`[uploadCartoonImage] Error:`, error);
-            
+
             // Update the image status to error
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
@@ -459,20 +460,20 @@ export const fixStuckImage = mutation({
         try {
             // Convert string ID to a proper Id type
             const imageId = args.imageIdString as Id<"images">;
-            
+
             // Find the image
             const image = await ctx.db.get(imageId);
             if (!image) {
                 console.log(`[fixStuckImage] Image ${imageId} not found`);
                 return { success: false, message: "Image not found" };
             }
-            
+
             // Update the image status to completed
             await ctx.db.patch(imageId, {
                 status: "completed",
                 updatedAt: Date.now(),
             });
-            
+
             console.log(`[fixStuckImage] Image ${imageId} status updated to completed`);
             return { success: true, message: "Image status updated to completed" };
         } catch (error) {
@@ -490,20 +491,20 @@ export const updateCartoonImageWithStorageId = internalMutation({
     },
     handler: async (ctx, args): Promise<string> => {
         console.log(`[updateCartoonImageWithStorageId] Updating image ${args.imageId} with storage ID ${args.storageId}`);
-        
+
         // Get the storage ID
         const storageId = args.storageId;
-        
+
         // Get the URL for the stored image with proper content type header
         try {
             // Instead of adding headers to the storage URL, we need to ensure they were set correctly
             // during upload in directlyUploadImage
             console.log(`[updateCartoonImageWithStorageId] Getting URL for storage ID: ${storageId}`);
             const cartoonImageUrl = await ctx.storage.getUrl(storageId) || '';
-            
+
             // Log the URL for debugging
             console.log(`[updateCartoonImageWithStorageId] Image URL: ${cartoonImageUrl}`);
-            
+
             // Update the image record with the storage ID and URL
             await ctx.db.patch(args.imageId, {
                 cartoonStorageId: storageId,
@@ -511,9 +512,9 @@ export const updateCartoonImageWithStorageId = internalMutation({
                 status: "completed",
                 updatedAt: Date.now(),
             });
-            
+
             console.log(`[updateCartoonImageWithStorageId] Image successfully updated with URL: ${cartoonImageUrl}`);
-            
+
             // Deduct one image credit from the user's account
             // Get the image to find the user
             const image = await ctx.db.get(args.imageId);
@@ -527,20 +528,20 @@ export const updateCartoonImageWithStorageId = internalMutation({
                             q.eq("userId", image.userId)
                         )
                         .collect();
-                    
+
                     const user = users[0];
                     if (user) {
                         // Use a type assertion to access imageCredits
                         const userWithCredits = user as unknown as { imageCredits?: number };
                         // Default to 0 if not defined yet
                         const currentCredits = userWithCredits.imageCredits || 0;
-                        
+
                         // Only deduct if they have credits
                         if (currentCredits > 0) {
                             await ctx.db.patch(user._id, {
                                 imageCredits: currentCredits - 1
                             } as any); // Using type assertion to bypass TypeScript checking
-                            
+
                             console.log(`[updateCartoonImageWithStorageId] Deducted 1 credit from user ${image.userId}, remaining: ${currentCredits - 1}`);
                         } else {
                             console.log(`[updateCartoonImageWithStorageId] User ${image.userId} has no credits to deduct`);
@@ -551,7 +552,7 @@ export const updateCartoonImageWithStorageId = internalMutation({
                     // Don't fail the image update if credit deduction fails
                 }
             }
-            
+
             // Return the URL so we can use it in the client
             return cartoonImageUrl;
         } catch (error) {
@@ -593,9 +594,9 @@ export const storeCartoonImage = internalMutation({
                     imageData = base64Data;
                 }
             }
-            
+
             console.log(`[storeCartoonImage] Processing image data of length: ${imageData.length} characters`);
-            
+
             // Create or get the image record first
             const tempImageId = existingImage ? existingImage._id : await ctx.db.insert("images", {
                 userId: args.userId,
@@ -605,7 +606,7 @@ export const storeCartoonImage = internalMutation({
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             });
-            
+
             // Convert base64 to blob for storage
             let base64Data = imageData;
             if (base64Data.startsWith('data:')) {
@@ -623,12 +624,12 @@ export const storeCartoonImage = internalMutation({
                     imageData = parts[1];
                 }
             }
-            
+
             try {
                 // First, generate a URL for uploading
                 const uploadUrl = await ctx.storage.generateUploadUrl();
                 console.log(`[storeCartoonImage] Generated upload URL: ${uploadUrl}`);
-                
+
                 // We'll update the image record with status completed once uploaded
                 await ctx.db.patch(tempImageId, {
                     cartoonStorageId: uploadUrl, // Temporarily store the upload URL
@@ -637,9 +638,9 @@ export const storeCartoonImage = internalMutation({
                     status: "processing",
                     updatedAt: Date.now(),
                 });
-                
+
                 console.log(`[storeCartoonImage] Image record updated with upload URL, ID: ${tempImageId}`);
-                
+
                 // Schedule the upload process
                 // We'll upload the image in a separate action
                 await ctx.scheduler.runAfter(0, internal.image.directlyUploadImage, {
@@ -654,7 +655,7 @@ export const storeCartoonImage = internalMutation({
                     updatedAt: Date.now(),
                 });
             }
-            
+
             console.log(`[storeCartoonImage] Image successfully stored with base64 data, ID: ${tempImageId}`);
             return tempImageId;
         } catch (error) {
@@ -662,7 +663,7 @@ export const storeCartoonImage = internalMutation({
 
             // If there's an error, update the status to error
             console.log("[storeCartoonImage] Setting status to error due to processing failure");
-            
+
             if (existingImage) {
                 // Update existing record with error status
                 await ctx.db.patch(existingImage._id, {

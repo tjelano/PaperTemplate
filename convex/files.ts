@@ -122,7 +122,7 @@ export const getImageByStorageId = query({
 
 // Generate a cartoon version from original image
 export const cartoonifyImage = mutation({
-  args: { storageId: v.string() },
+  args: { storageId: v.string(), style: v.string() },
   handler: async (ctx, args) => {
     // Find the image record by storage ID
     const images = await ctx.db
@@ -165,6 +165,7 @@ export const cartoonifyImage = mutation({
       await ctx.scheduler.runAfter(0, internal.image.ImageGen, {
         imageUrl: image.originalImageUrl!,
         userId: image.userId,
+        style: args.style
       });
       
       // The ImageGen action will update the image record when it completes

@@ -5,6 +5,7 @@ import React, { DragEvent, useEffect, useRef, useState } from "react"
 import { api } from "../../convex/_generated/api"
 import { Credits } from "./credits"
 import { Button } from "./ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { useToast } from "./ui/toast"
 
 export default function CartoonHero() {
@@ -13,10 +14,23 @@ export default function CartoonHero() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageId, setImageId] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [cartoonStyle, setCartoonStyle] = useState<string>("studio-ghibli")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const getPlansAction = useAction(api.transactions.getPlansPolar);
   const [plans, setPlans] = useState<any>(null);
   const { addToast } = useToast();
+  
+  // Available cartoon styles
+  const cartoonStyles = [
+    { id: "studio-ghibli", name: "Studio Ghibli" },
+    { id: "simpsons", name: "Simpsons" },
+    { id: "family-guy", name: "Family Guy" },
+    { id: "disney", name: "Disney" },
+    { id: "pixar", name: "Pixar" },
+    { id: "anime", name: "Anime" },
+    { id: "comic-book", name: "Comic Book" },
+    { id: "south-park", name: "South Park" }
+  ]
 
 
   useEffect(() => {
@@ -165,7 +179,7 @@ export default function CartoonHero() {
         )
         
         // Automatically start cartoonifying the image
-        await cartoonifyImage({ storageId })
+        await cartoonifyImage({ storageId, style: cartoonStyle })
       }
     } catch (error) {
       console.error("Error uploading image:", error)
@@ -341,8 +355,29 @@ export default function CartoonHero() {
                 </div>
               </div>
               
-              {/* Action buttons row */}
-              <div className="mt-4 flex justify-center">
+              {/* Style selector and action buttons row */}
+              <div className="mt-4 flex flex-col items-center space-y-3">
+                {/* Style selector */}
+                <div className="w-full max-w-md">
+                  <label className="block text-xs font-medium text-[var(--color-neutral-700)] mb-1 ml-1">Select Cartoon Style</label>
+                  <Select
+                    value={cartoonStyle}
+                    onValueChange={(value) => setCartoonStyle(value)}
+                  >
+                    <SelectTrigger className="w-full h-11 rounded-lg border-[var(--color-neutral-200)] hover:border-[var(--color-primary)] transition-colors">
+                      <SelectValue placeholder="Select a style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cartoonStyles.map((style) => (
+                        <SelectItem key={style.id} value={style.id} className="cursor-pointer">
+                          {style.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Action buttons */}
                 <div className="flex gap-2 w-full max-w-md">
                   <input 
                     type="file" 
@@ -380,6 +415,14 @@ export default function CartoonHero() {
             </div>
           </div>
 
+          {/* Style preview indicator */}
+          <div className="mt-6 text-center">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-neutral-700)] bg-[var(--color-neutral-100)] px-3 py-1 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
+              Selected style: {cartoonStyles.find(style => style.id === cartoonStyle)?.name || "Minimalist"}
+            </span>
+          </div>
+          
           {!isSignedIn && (
             <div className="mt-8 text-center bg-white rounded-2xl p-6 shadow-md max-w-md mx-auto border border-[var(--color-neutral-100)] card">
               <div className="mb-3 mx-auto w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">

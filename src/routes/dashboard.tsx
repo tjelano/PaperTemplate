@@ -62,7 +62,7 @@ function Dashboard() {
                           <img 
                             src={image.originalImageUrl} 
                             alt="Original" 
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover rounded"
                           />
                         )}
                       </div>
@@ -73,7 +73,7 @@ function Dashboard() {
                           <img 
                             src={image.cartoonImageUrl} 
                             alt="Cartoon" 
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover rounded"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-neutral-100 text-neutral-500">
