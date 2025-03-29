@@ -181,108 +181,136 @@ export default function CartoonHero() {
         </div>
 
         {/* Image Transformation Section */}
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-8 sm:grid-cols-2">
-            {/* Original Image Card */}
-            <div className="group border relative rounded-[32px] bg-white p-8 transition-all hover:scale-[1.01] hover:shadow-lg">
-              {/* Background gradient effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white to-neutral-50 rounded-[32px] -z-10" />
-              
-              <h3 className="text-xl font-semibold text-[#1D1D1F] mb-4">
-                Original Photo
-              </h3>
-              
-              <div className="aspect-square overflow-hidden rounded-[24px] relative mb-4 border border-neutral-100">
-                {image ? (
-                  <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center p-4 bg-neutral-50">
-                    <ImageIcon className="h-10 w-10 text-[#86868B] mb-2" />
-                    <p className="text-base text-[#86868B] font-medium">Upload your photo</p>
-                  </div>
-                )}
+        <div className="mx-auto max-w-3xl">
+          <div className="relative rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
+            
+            {/* Image transformation studio */}
+            <div className="relative z-10 py-6">
+              {/* Image headers */}
+              <div className="flex justify-between mb-2 px-4">
+                <div className="flex items-center pl-5">
+                  <div className="w-2 h-2 rounded-full bg-[#0066CC] mr-2"></div>
+                  <span className="text-sm font-medium text-[#1D1D1F]">Original Photo</span>
+                </div>
+                <div className="flex items-center pr-5">
+                  <span className="text-sm font-medium text-[#1D1D1F]">Cartoon Version</span>
+                  <div className="w-2 h-2 rounded-full bg-[#0066CC] ml-2"></div>
+                </div>
               </div>
               
-              <div className="mt-4">
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-12 text-base rounded-[14px] bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all"
-                  disabled={!isSignedIn || isProcessing}
-                >
-                  <Upload className="mr-2 h-5 w-5" /> Upload Photo
-                </Button>
-              </div>
-            </div>
-
-            {/* Cartoon Image Card */}
-            <div className="group border relative rounded-[32px] bg-white p-8 transition-all hover:scale-[1.01] hover:shadow-lg">
-              {/* Background gradient effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white to-neutral-50 rounded-[32px] -z-10" />
-              
-              <h3 className="text-xl font-semibold text-[#1D1D1F] mb-4">
-                Cartoon Version
-              </h3>
-              
-              <div className="aspect-square overflow-hidden rounded-[24px] relative mb-4 border border-neutral-100">
-                {cartoonImage ? (
-                  <img
-                    src={cartoonImage}
-                    alt="Cartoon"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center p-4 bg-neutral-50">
-                    <Sparkles className="h-10 w-10 text-[#86868B] mb-2" />
-                    <p className="text-base text-[#86868B] font-medium">Cartoon result</p>
-                    {uploadError && (
-                      <p className="mt-2 text-sm text-red-500">{uploadError}</p>
+              {/* Main content area */}
+              <div className="flex items-center justify-center">
+                {/* Left side - Original image */}
+                <div className="w-[42%]">
+                  <div className="aspect-square overflow-hidden rounded-xl relative border border-neutral-100 bg-white">
+                    {image ? (
+                      <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center p-4">
+                        <div className="bg-blue-50 p-3 rounded-full mb-2">
+                          <ImageIcon className="h-6 w-6 text-[#0066CC]" />
+                        </div>
+                        <p className="text-xs text-[#86868B] font-medium">Upload your photo</p>
+                        <p className="text-xs text-[#86868B] mt-1 max-w-[150px] text-center opacity-80">Use a clear portrait photo</p>
+                      </div>
                     )}
                   </div>
-                )}
-
-                {isProcessing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-[24px]">
-                    <div className="flex flex-col items-center">
-                      <div className="h-10 w-10 border-2 border-t-[#0066CC] border-r-[#0066CC]/20 border-b-[#0066CC]/20 border-l-[#0066CC]/20 rounded-full animate-spin"></div>
-                      <p className="text-sm mt-3 font-medium text-[#1D1D1F]">Processing...</p>
-                    </div>
+                </div>
+                
+                {/* Middle - Transformation arrow */}
+                <div className="flex items-center justify-center mx-2">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#0066CC] text-white">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
-                )}
+                </div>
+
+                {/* Right side - Cartoon result */}
+                <div className="w-[42%]">
+                  <div className="aspect-square overflow-hidden rounded-xl relative border border-neutral-100 bg-white">
+                    {cartoonImage ? (
+                      <img
+                        src={cartoonImage}
+                        alt="Cartoon"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center p-4">
+                        <div className="bg-blue-50 p-3 rounded-full mb-2">
+                          <Sparkles className="h-6 w-6 text-[#0066CC]" />
+                        </div>
+                        <p className="text-xs text-[#86868B] font-medium">Cartoon result</p>
+                        <p className="text-xs text-[#86868B] mt-1 max-w-[150px] text-center opacity-80">Result will appear here</p>
+                        {uploadError && (
+                          <p className="mt-2 text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full">{uploadError}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {isProcessing && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-xl">
+                        <div className="flex flex-col items-center">
+                          <div className="h-8 w-8 border-2 border-t-[#0066CC] border-r-[#0066CC]/20 border-b-[#0066CC]/20 border-l-[#0066CC]/20 rounded-full animate-spin"></div>
+                          <p className="text-xs mt-2 font-medium text-[#1D1D1F] bg-white px-3 py-0.5 rounded-full">Processing...</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              <div className="mt-4 space-y-3">
-                <Button
-                  onClick={handleCartoonify}
-                  disabled={!isSignedIn || !image || isProcessing}
-                  className="w-full h-12 text-base rounded-[14px] bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" /> Cartoonify
-                </Button>
-
-                {cartoonImage && (
+              {/* Action buttons row */}
+              <div className="mt-4 flex justify-center">
+                <div className="flex gap-2 w-full max-w-md">
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                   <Button
-                    variant="outline"
-                    className="w-full h-12 text-base rounded-[14px] border-[#0066CC]/30 hover:bg-[#0066CC]/5 text-[#0066CC] hover:text-[#0066CC] shadow-sm transition-all"
-                    onClick={() => window.open(cartoonImage, "_blank")}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 h-10 text-xs font-medium rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all"
+                    disabled={!isSignedIn || isProcessing}
                   >
-                    <Download className="mr-2 h-5 w-5" /> Download
+                    <Upload className="mr-1.5 h-4 w-4" /> Upload
                   </Button>
-                )}
+
+                  <Button
+                    onClick={handleCartoonify}
+                    disabled={!isSignedIn || !image || isProcessing}
+                    className="flex-1 h-10 text-xs font-medium rounded-lg bg-[#8BB4F7] hover:bg-[#7CAAFC] text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles className="mr-1.5 h-4 w-4" /> Transform
+                  </Button>
+
+                  {cartoonImage && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-10 text-xs font-medium rounded-lg border-[#0066CC]/30 hover:bg-[#0066CC]/5 text-[#0066CC] hover:text-[#0066CC] shadow-sm transition-all"
+                      onClick={() => window.open(cartoonImage, "_blank")}
+                    >
+                      <Download className="mr-1.5 h-4 w-4" /> Download
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {!isSignedIn && (
-            <div className="mt-8 text-center">
+            <div className="mt-8 text-center bg-white rounded-2xl p-6 shadow-sm max-w-md mx-auto border border-neutral-100">
+              <div className="mb-3 mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#0066CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="#0066CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-[#1D1D1F] mb-2">Sign in to continue</h3>
+              <p className="text-sm text-[#86868B] mb-4">Create an account to access all premium features</p>
               <SignInButton mode="modal" fallbackRedirectUrl="/">
                 <Button
-                  className="h-12 px-6 text-base rounded-[14px] bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all"
+                  className="h-12 px-6 text-sm font-medium rounded-xl bg-[#0066CC] hover:bg-[#0077ED] text-white shadow-sm transition-all hover:shadow-md w-full"
                 >
-                  Sign In to Continue
+                  Sign In
                 </Button>
               </SignInButton>
-              <p className="mt-4 text-sm text-[#86868B]">Sign in to access all features</p>
             </div>
           )}
         </div>
