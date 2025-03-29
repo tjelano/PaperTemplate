@@ -9,7 +9,16 @@ export const Route = createRootRoute({
             <header className="border-b border-black/10 sticky top-0 z-[99] bg-white">
                 <div className="flex px-6 h-14 items-center max-w-5xl mx-auto">
                     <Link to="/">
-                        <img src="/logo.png" alt="PaperBag logo" width={48} height={48} />
+                        <img 
+                            src="/logo.png" 
+                            alt="PaperBag logo" 
+                            loading="eager" 
+                            fetchPriority="high" 
+                            width={48} 
+                            height={48} 
+                            decoding="sync"
+                            style={{ aspectRatio: '1/1' }}
+                        />
                     </Link>
                     <nav className="ml-auto flex items-center justify-center space-x-4">
                         <Link to="/dashboard">
