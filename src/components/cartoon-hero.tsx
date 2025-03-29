@@ -42,6 +42,9 @@ export default function CartoonHero() {
   const saveUploadedImage = useMutation(api.files.saveUploadedImage)
   const cartoonifyImage = useMutation(api.files.cartoonifyImage)
   const storeUser = useMutation(api.files.storeUser)
+  
+  // Get user's credit status
+  const userCreditsStatus = useQuery(api.transactions.getUserCreditsStatus)
 
   // Get image details from the database
   const imageDetails = useQuery(
@@ -131,8 +134,7 @@ export default function CartoonHero() {
 
         setImageId(storageId)
         
-        // Clear the uploaded image when processing starts
-        setImage(null)
+        // Keep the uploaded image visible during processing
         
         // Show toast notification with dashboard button that stays open until closed
         addToast(
@@ -295,7 +297,7 @@ export default function CartoonHero() {
                       <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-xl">
                         <div className="flex flex-col items-center">
                           <div className="h-8 w-8 border-2 border-t-[var(--color-primary)] border-r-[var(--color-primary)]/20 border-b-[var(--color-primary)]/20 border-l-[var(--color-primary)]/20 rounded-full animate-spin"></div>
-                          <p className="text-xs mt-2 font-medium text-[var(--color-neutral-800)] bg-white px-3 py-0.5 rounded-full shadow-sm">Working on it...</p>
+                          <p className="text-xs mt-2 font-medium text-[var(--color-neutral-800)] bg-white px-3 py-0.5 rounded-full shadow-sm">Processing</p>
                         </div>
                       </div>
                     )}
@@ -334,36 +336,7 @@ export default function CartoonHero() {
                         <Download className="mr-1.5 h-5 w-5" /> Download
                       </Button>
                       
-                      <Button
-                        variant="outline"
-                        className="h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-                        onClick={() => {
-                          // Create a new page with the image embedded directly
-                          // This forces the browser to display it as an image
-                          const imageUrl = cartoonImage || '';
-                          const newWindow = window.open('', '_blank');
-                          if (newWindow) {
-                            newWindow.document.write(`
-                              <!DOCTYPE html>
-                              <html>
-                                <head>
-                                  <title>Cartoon Image</title>
-                                  <style>
-                                    body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }
-                                    img { max-width: 90%; max-height: 90vh; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-                                  </style>
-                                </head>
-                                <body>
-                                  <img src="${imageUrl}" alt="Cartoon Image" />
-                                </body>
-                              </html>
-                            `);
-                            newWindow.document.close();
-                          }
-                        }}
-                      >
-                        View as Image
-                      </Button>
+    
                     </div>
                   )}
                 </div>

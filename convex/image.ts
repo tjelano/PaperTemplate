@@ -514,6 +514,44 @@ export const updateCartoonImageWithStorageId = internalMutation({
             
             console.log(`[updateCartoonImageWithStorageId] Image successfully updated with URL: ${cartoonImageUrl}`);
             
+            // Deduct one image credit from the user's account
+            // Get the image to find the user
+            const image = await ctx.db.get(args.imageId);
+            if (image && image.userId) {
+                try {
+                    // Deduct a credit using auth identity from the image
+                    // Get the user record
+                    const users = await ctx.db
+                        .query("users")
+                        .withIndex("by_user_id", (q) =>
+                            q.eq("userId", image.userId)
+                        )
+                        .collect();
+                    
+                    const user = users[0];
+                    if (user) {
+                        // Use a type assertion to access imageCredits
+                        const userWithCredits = user as unknown as { imageCredits?: number };
+                        // Default to 0 if not defined yet
+                        const currentCredits = userWithCredits.imageCredits || 0;
+                        
+                        // Only deduct if they have credits
+                        if (currentCredits > 0) {
+                            await ctx.db.patch(user._id, {
+                                imageCredits: currentCredits - 1
+                            } as any); // Using type assertion to bypass TypeScript checking
+                            
+                            console.log(`[updateCartoonImageWithStorageId] Deducted 1 credit from user ${image.userId}, remaining: ${currentCredits - 1}`);
+                        } else {
+                            console.log(`[updateCartoonImageWithStorageId] User ${image.userId} has no credits to deduct`);
+                        }
+                    }
+                } catch (error) {
+                    console.error(`[updateCartoonImageWithStorageId] Error deducting credit:`, error);
+                    // Don't fail the image update if credit deduction fails
+                }
+            }
+            
             // Return the URL so we can use it in the client
             return cartoonImageUrl;
         } catch (error) {

@@ -241,6 +241,47 @@ export const getUserPurchaseHistory = query({
 // For backwards compatibility
 export const getUserSubscription = getUserPurchaseHistory;
 
+// Deduct a credit when an image is successfully generated
+export const deductImageCredit = mutation({
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            return { success: false, message: "Not authenticated" };
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_user_id", (q) =>
+                q.eq("userId", identity.subject)
+            )
+            .unique();
+
+        if (!user) {
+            return { success: false, message: "User not found" };
+        }
+
+        // Use a type assertion to access imageCredits
+        const userWithCredits = user as unknown as { imageCredits?: number };
+        // Default to 0 if not defined yet
+        const currentCredits = userWithCredits.imageCredits || 0;
+        
+        // Check if user has enough credits
+        if (currentCredits <= 0) {
+            return { success: false, message: "No credits available", remainingCredits: 0 };
+        }
+
+        // Deduct 1 credit
+        await ctx.db.patch(user._id, {
+            imageCredits: currentCredits - 1
+        } as any); // Using type assertion to bypass TypeScript checking
+
+        // No need to log this in a separate table, we'll track it through user credits only
+        console.log(`[deductImageCredit] Deducted 1 credit from user ${identity.subject}, remaining: ${currentCredits - 1}`);
+
+        return { success: true, message: "Credit deducted", remainingCredits: currentCredits - 1 };
+    }
+});
+
 // Handle payment webhook events from Polar
 export const paymentWebhookHandler = mutation({
     args: {
