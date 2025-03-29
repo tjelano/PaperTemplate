@@ -44,7 +44,6 @@ export default function CartoonHero() {
   const storeUser = useMutation(api.files.storeUser)
   
   // Get user's credit status
-  const userCreditsStatus = useQuery(api.transactions.getUserCreditsStatus)
 
   // Get image details from the database
   const imageDetails = useQuery(
