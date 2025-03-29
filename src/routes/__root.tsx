@@ -6,10 +6,10 @@ import { UserCredits } from '../components/user-credits'
 export const Route = createRootRoute({
     component: () => (
         <>
-            <header className="border-b border-black/10 sticky top-0 z-10 bg-white">
+            <header className="border-b border-black/10 sticky top-0 z-[99] bg-white">
                 <div className="flex px-6 h-14 items-center max-w-5xl mx-auto">
                     <Link to="/">
-                        <span className="font-bold text-lg tracking-tight">CartoonAI</span>
+                        <img src="/logo.png" alt="PaperBag logo" width={48} height={48} />
                     </Link>
                     <nav className="ml-auto flex items-center justify-center space-x-4">
                         <Link to="/dashboard">
