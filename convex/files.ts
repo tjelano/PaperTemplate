@@ -382,3 +382,22 @@ export const storeUser = mutation({
     return userId;
   },
 });
+
+// Get all processing images for a user
+export const getUserProcessingImages = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    // Get all images that are in processing state for this user
+    const processingImages = await ctx.db
+      .query("images")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("userId"), args.userId),
+          q.eq(q.field("status"), "processing")
+        )
+      )
+      .collect();
+
+    return processingImages;
+  },
+});

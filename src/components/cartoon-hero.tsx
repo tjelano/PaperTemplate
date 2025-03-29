@@ -9,12 +9,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useToast } from "./ui/toast"
 
 export default function CartoonHero() {
+  const { isSignedIn, userId } = useAuth()
+  const { user } = useUser()
+
   const [image, setImage] = useState<string | null>(null)
   const [cartoonImage, setCartoonImage] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageId, setImageId] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [cartoonStyle, setCartoonStyle] = useState<string>("studio-ghibli")
+
+  // Query to check if user has any processing images
+  const userProcessingImages = useQuery(api.files.getUserProcessingImages, 
+    isSignedIn && userId ? { userId } : "skip"
+  )
+
+  // Update processing state based on database
+  useEffect(() => {
+    if (userProcessingImages && userProcessingImages.length > 0) {
+      // Get the first processing image
+      const processingImage = userProcessingImages[0];
+      
+      // Set processing state
+      setIsProcessing(true);
+      setUploadError("You have an image being processed. Please wait for it to complete.");
+      
+      // Set the image ID so we can track its status
+      if (processingImage.originalStorageId) {
+        setImageId(processingImage.originalStorageId);
+      }
+      
+      // Get and display the original image if available
+      if (processingImage.originalImageUrl) {
+        setImage(processingImage.originalImageUrl);
+      }
+    }
+  }, [userProcessingImages])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const getPlansAction = useAction(api.transactions.getPlansPolar);
   const [plans, setPlans] = useState<any>(null);
@@ -47,9 +77,6 @@ export default function CartoonHero() {
 
 
   // We'll use messages to trigger cartoonification instead of extracting images directly
-
-  const { isSignedIn, userId } = useAuth()
-  const { user } = useUser()
 
   // Convex mutations and queries
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
@@ -238,6 +265,12 @@ export default function CartoonHero() {
                       <div 
                         className="flex h-full w-full flex-col items-center justify-center p-6 cursor-pointer"
                         onClick={() => {
+                          // Check if already processing
+                          if (isProcessing) {
+                            setUploadError("Please wait for the current image to finish processing")
+                            return
+                          }
+
                           // Check if user is authenticated
                           if (!isSignedIn) {
                             setUploadError("Please sign in to generate cartoon images")
@@ -283,6 +316,12 @@ export default function CartoonHero() {
                             return
                           }
                           
+                          // Check if already processing
+                          if (isProcessing) {
+                            setUploadError("Please wait for the current image to finish processing")
+                            return
+                          }
+
                           const files = e.dataTransfer.files;
                           if (files && files.length > 0) {
                             const file = files[0];
