@@ -172,7 +172,7 @@ export default function CartoonHero() {
               Transform your photos instantly
             </span>
           </div>
-          <h1 className="text-3xl font-bold md:text-5xl tracking-tight text-[var(--color-neutral-900)]">
+          <h1 className="text-3xl font-bold md:text-5xl tracking-tight text-[var(--color-neutral-900)] text-balance">
             Bag yourself a cartoon version in seconds.
           </h1>
           <p className="mt-6 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
@@ -362,7 +362,7 @@ export default function CartoonHero() {
               Choose Your Plan
             </span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-neutral-900)]">
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-neutral-900)] text-balance">
             No Frills. Just Cartoons.
           </h2>
           <p className="mt-4 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
