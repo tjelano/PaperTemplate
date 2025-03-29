@@ -1,11 +1,11 @@
-import { useChat } from "@ai-sdk/react"
 import { SignInButton, useAuth, useUser } from "@clerk/clerk-react"
 import { useAction, useMutation, useQuery } from "convex/react"
-import { ChefHat, Download, Sparkles, Upload } from "lucide-react"
+import { Download, Sparkles, Upload } from "lucide-react"
 import React, { DragEvent, useEffect, useRef, useState } from "react"
 import { api } from "../../convex/_generated/api"
 import { Credits } from "./credits"
 import { Button } from "./ui/button"
+import { useToast } from "./ui/toast"
 
 export default function CartoonHero() {
   const [image, setImage] = useState<string | null>(null)
@@ -16,6 +16,7 @@ export default function CartoonHero() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const getPlansAction = useAction(api.transactions.getPlansPolar);
   const [plans, setPlans] = useState<any>(null);
+  const { addToast } = useToast();
 
 
   useEffect(() => {
@@ -30,12 +31,8 @@ export default function CartoonHero() {
     fetchPlans();
   }, [getPlansAction]);
 
-  const { messages, handleInputChange, handleSubmit } = useChat({
-    api: "https://blessed-kudu-154.convex.site/api/chat",
-    body: image ? { image } : undefined
-  })
 
-  console.log('messages', messages)
+  // We'll use messages to trigger cartoonification instead of extracting images directly
 
   const { isSignedIn, userId } = useAuth()
   const { user } = useUser()
@@ -45,6 +42,7 @@ export default function CartoonHero() {
   const saveUploadedImage = useMutation(api.files.saveUploadedImage)
   const cartoonifyImage = useMutation(api.files.cartoonifyImage)
   const storeUser = useMutation(api.files.storeUser)
+  const updateImageWithStorageId = useMutation(api.files.updateImageWithStorageId)
 
   // Get image details from the database
   const imageDetails = useQuery(
@@ -71,10 +69,88 @@ export default function CartoonHero() {
 
   // Update cartoonImage when imageDetails changes
   useEffect(() => {
-    if (imageDetails?.status === "completed" && imageDetails?.cartoonImageUrl) {
-      setCartoonImage(imageDetails.cartoonImageUrl)
+    if (imageDetails) {
+      if (imageDetails.status === "completed" && imageDetails.cartoonImageUrl) {
+        console.log("Setting cartoon image from database:", imageDetails.cartoonImageUrl);
+        setCartoonImage(imageDetails.cartoonImageUrl);
+        setIsProcessing(false);
+      } else if (imageDetails.status === "processing" && imageDetails.cartoonImageUrl === "data:image/png;base64,PENDING_UPLOAD") {
+        // This is a special marker that indicates the image is being processed
+        // but the actual data is too large to store in the database
+        console.log("Image is still being processed, waiting for completion...");
+        setIsProcessing(true);
+      } else if (imageDetails.status === "needs_client_upload") {
+        // Handle images that need client-side upload
+        console.log("Image needs client-side upload, fetching the data...");
+        handleClientUpload(imageDetails);
+      } else if (imageDetails.status === "error") {
+        console.error("Error processing image");
+        setIsProcessing(false);
+        setUploadError("There was an error processing your image. Please try again.");
+      }
     }
   }, [imageDetails])
+  
+  // Handle client-side upload for images marked as needs_client_upload
+  const handleClientUpload = async (imageDetails: any) => {
+    try {
+      console.log("Starting client-side upload process for image", imageDetails._id);
+      setIsProcessing(true);
+      
+      // Generate a new upload URL
+      const uploadUrl = await generateUploadUrl();
+      if (!uploadUrl) {
+        throw new Error("Failed to generate upload URL");
+      }
+      
+      // Fetch the actual image data
+      const imageResponse = await fetch(imageDetails.originalImageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch original image: ${imageResponse.status}`);
+      }
+      
+      // Get the image blob
+      const imageBlob = await imageResponse.blob();
+      
+      // Upload to Convex storage
+      const formData = new FormData();
+      formData.append('file', imageBlob, 'cartoon.png');
+      
+      console.log("Uploading cartoon image to Convex storage...");
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
+      
+      // Get the storage ID
+      const result = await uploadResponse.json();
+      if (!result.storageId) {
+        throw new Error("No storage ID returned");
+      }
+      
+      // Update the image record
+      console.log("Updating image record with storage ID:", result.storageId);
+      const updatedUrl = await updateImageWithStorageId({
+        imageId: imageDetails._id,
+        storageId: result.storageId
+      });
+      
+      console.log("Image updated with URL:", updatedUrl);
+      if (updatedUrl) {
+        setCartoonImage(updatedUrl);
+      }
+      
+      setIsProcessing(false);
+    } catch (error) {
+      console.error("Error in client-side upload:", error);
+      setIsProcessing(false);
+      setUploadError("Failed to process image. Please try again.");
+    }
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -90,16 +166,6 @@ export default function CartoonHero() {
         const imageData = event.target?.result as string
         setImage(imageData)
         setCartoonImage(null)
-
-        // Set the instruction message and submit to the AI chat
-        handleInputChange({
-          target: { value: 'Convert this image to a cartoon image' }
-        } as React.ChangeEvent<HTMLInputElement>)
-
-        // Submit the image and message to the AI chat
-        setTimeout(() => {
-          handleSubmit(new Event('submit') as any)
-        }, 100)
       }
       reader.readAsDataURL(file)
 
@@ -128,6 +194,28 @@ export default function CartoonHero() {
         })
 
         setImageId(storageId)
+        
+        // Clear the uploaded image when processing starts
+        setImage(null)
+        
+        // Show toast notification with dashboard button that stays open until closed
+        addToast(
+          <div className="space-y-2">
+            <p>Your image is being processed.</p>
+            <p>You can safely refresh or come back to it later in your dashboard.</p>
+            <Button 
+              className="mt-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white text-xs py-1 px-3"
+              onClick={() => window.location.href = "/dashboard"}
+            >
+              Go to Dashboard
+            </Button>
+          </div>, 
+          "info", 
+          0 // 0 means it won't auto-close
+        )
+        
+        // Automatically start cartoonifying the image
+        await cartoonifyImage({ storageId })
       }
     } catch (error) {
       console.error("Error uploading image:", error)
@@ -137,30 +225,7 @@ export default function CartoonHero() {
     }
   }
 
-  const handleCartoonify = async () => {
-    if (!image || !imageId || !isSignedIn) return
-    setIsProcessing(true)
-    setUploadError(null)
 
-    try {
-      // Process image through Convex
-      await cartoonifyImage({ storageId: imageId })
-
-      // After processing, the imageDetails query will automatically refresh
-      // and we can get the cartoon image URL from there
-      if (imageDetails?.cartoonImageUrl) {
-        setCartoonImage(imageDetails.cartoonImageUrl)
-      } else if (imageDetails?.originalImageUrl) {
-        // Fallback to original image if cartoon isn't available
-        setCartoonImage(imageDetails.originalImageUrl)
-      }
-    } catch (error) {
-      console.error("Error cartoonifying image:", error)
-      setUploadError("Failed to cartoonify image. Please try again.")
-    } finally {
-      setIsProcessing(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-[var(--color-neutral-50)] ">
@@ -242,6 +307,8 @@ export default function CartoonHero() {
                                 fileInputRef.current.files = dataTransfer.files;
                                 const event = new Event('change', { bubbles: true });
                                 fileInputRef.current.dispatchEvent(event);
+                                
+                                // The toast will be handled in handleFileChange
                               }
                             }
                           }
@@ -312,14 +379,14 @@ export default function CartoonHero() {
                   />
     
 
-                  <Button
+                  {/* <Button
                     onClick={handleCartoonify}
                     disabled={!isSignedIn || !image || isProcessing}
                     className="flex-1 h-12 text-md rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 relative overflow-hidden group"
                   >
                     <span className="shimmer-effect"></span>
                     <ChefHat className="mr-1.5 h-8 w-8 animate-pulse" /> Cook
-                  </Button>
+                  </Button> */}
 
                   {cartoonImage && (
                     <Button

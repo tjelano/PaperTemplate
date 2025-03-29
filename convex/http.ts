@@ -1,8 +1,7 @@
 import { httpRouter } from "convex/server";
-import { httpAction } from "./_generated/server";
-import { AiChat } from "./chat";
-import { paymentWebhook } from "./transactions";
 import { ConvexError } from "convex/values";
+import { httpAction } from "./_generated/server";
+import { paymentWebhook } from "./transactions";
 
 const http = httpRouter();
 
@@ -25,13 +24,6 @@ http.route({
       },
     });
   }),
-});
-
-// Handle POST requests to chat endpoint
-http.route({
-  path: "/api/chat",
-  method: "POST",
-  handler: AiChat,
 });
 
 http.route({

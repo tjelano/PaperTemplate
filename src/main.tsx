@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import './index.css'
 import './styles/brand.css'
 import './styles/animations.css'
+import { ToastProvider } from './components/ui/toast'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -38,7 +39,9 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>
     </StrictMode>,

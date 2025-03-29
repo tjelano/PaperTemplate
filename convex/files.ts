@@ -1,5 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { ImageGen } from "./image";
+import { api, internal } from "./_generated/api";
 
 // Generate a signed upload URL
 export const generateUploadUrl = mutation({
@@ -11,14 +13,14 @@ export const generateUploadUrl = mutation({
 
 // Save the uploaded image information
 export const saveUploadedImage = mutation({
-  args: { 
+  args: {
     storageId: v.string(),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     // We don't need to check if the file exists
     // The file was just uploaded so it should exist
-    
+
     // Generate a URL for the uploaded file
     const imageUrl = await ctx.storage.getUrl(args.storageId);
 
@@ -53,7 +55,7 @@ export const getUserImages = query({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
-    
+
     return images;
   },
 });
@@ -78,7 +80,7 @@ export const getImageByStorageId = query({
       .query("images")
       .filter(q => q.eq(q.field("originalStorageId"), args.storageId))
       .collect();
-    
+
     return images[0] || null;
   },
 });
@@ -92,39 +94,221 @@ export const cartoonifyImage = mutation({
       .query("images")
       .filter(q => q.eq(q.field("originalStorageId"), args.storageId))
       .collect();
-    
+
     const image = images[0];
     if (!image) {
       throw new ConvexError("Image record not found");
     }
-    
+
+    // Check if image is already being processed or completed
+    if (image.status === "processing") {
+      console.log(`[cartoonifyImage] Image ${image._id} is already being processed, skipping`);
+      return { success: true, status: "processing" };
+    }
+
+    if (image.status === "completed" && image.cartoonImageUrl) {
+      console.log(`[cartoonifyImage] Image ${image._id} is already completed, skipping`);
+      return { success: true, status: "completed" };
+    }
+
     // Update status to processing
     await ctx.db.patch(image._id, {
       status: "processing",
       updatedAt: Date.now(),
     });
 
-    // In a real implementation, we would call an external API or ML model here
-    // For demonstration purposes, we'll just use the original image as cartoon
-    // In a real application:
-    // 1. Process the image with an AI/ML model or external API
-    // 2. Upload the processed image to storage
-    // 3. Get a storage ID for the cartoon image
+    // Call the Gemini AI to generate a cartoon version of the image
+    // The ImageGen action will:
+    // 1. Fetch the image from the URL
+    // 2. Convert it to base64
+    // 3. Send it to Gemini API for cartoonification
+    // 4. Store the result in the database
+    console.log("[cartoonifyImage] Scheduling ImageGen action with image URL:", image.originalImageUrl);
     
-    // For this demo, we're reusing the original image/URL
-    // In a real implementation, you would upload a new processed image
-    const cartoonStorageId = image.originalStorageId;
-    const cartoonImageUrl = image.originalImageUrl;
+    try {
+      // Schedule the image generation task
+      await ctx.scheduler.runAfter(0, internal.image.ImageGen, {
+        imageUrl: image.originalImageUrl!,
+        userId: image.userId,
+      });
+      
+      // The ImageGen action will update the image record when it completes
+      return { success: true, status: "processing" };
+    } catch (error) {
+      console.error("[cartoonifyImage] Error scheduling ImageGen action:", error);
+      
+      // If scheduling fails, revert status to pending
+      await ctx.db.patch(image._id, {
+        status: "pending",
+        updatedAt: Date.now()
+        // Note: We can't store the error message since there's no field for it in the schema
+      });
+      
+      throw new ConvexError("Failed to schedule image generation");
+    }
+  },
+});
+
+// Upload a cartoon image to storage and update the image record
+export const uploadCartoonImage = mutation({
+  args: {
+    imageId: v.id("images"),
+  },
+  handler: async (ctx, args) => {
+    // Get the user identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    // Find the image record
+    const image = await ctx.db.get(args.imageId);
+    if (!image) {
+      throw new ConvexError("Image not found");
+    }
+
+    // Verify the user owns this image
+    if (image.userId !== identity.subject) {
+      throw new ConvexError("Not authorized to upload this image");
+    }
+
+    // Generate a signed upload URL for the client
+    const uploadUrl = await ctx.storage.generateUploadUrl();
+
+    return {
+      uploadUrl,
+      imageId: args.imageId,
+      // Return the base64 data that was temporarily stored in cartoonStorageId
+      // The client will use this to upload the image
+      base64Data: image.cartoonStorageId,
+    };
+  },
+});
+
+// Update the image record with the storage ID after upload
+export const updateCartoonImageStorage = mutation({
+  args: {
+    imageId: v.id("images"),
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get the user identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    // Find the image record
+    const image = await ctx.db.get(args.imageId);
+    if (!image) {
+      throw new ConvexError("Image not found");
+    }
+
+    // Verify the user owns this image
+    if (image.userId !== identity.subject) {
+      throw new ConvexError("Not authorized to update this image");
+    }
+
+    // Get the URL for the stored image
+    const cartoonImageUrl = await ctx.storage.getUrl(args.storageId);
+    if (!cartoonImageUrl) {
+      throw new ConvexError("Failed to get URL for uploaded image");
+    }
     
-    // Update the record with the cartoon image information
-    await ctx.db.patch(image._id, {
+    // We'll handle proper image display via Content-Type on the client side
+
+    // Update the image record with the storage ID and URL
+    await ctx.db.patch(args.imageId, {
+      cartoonStorageId: args.storageId,
+      cartoonImageUrl: cartoonImageUrl,
+    });
+
+    return cartoonImageUrl;
+  },
+});
+
+// Upload a base64 image to storage and get a clickable URL
+export const uploadBase64Image = mutation({
+  args: {
+    imageId: v.id("images"),
+    base64Data: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get the user identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    // Find the image record
+    const image = await ctx.db.get(args.imageId);
+    if (!image) {
+      throw new ConvexError("Image not found");
+    }
+
+    // Verify the user owns this image
+    if (image.userId !== identity.subject) {
+      throw new ConvexError("Not authorized to update this image");
+    }
+
+    try {
+      // Generate a URL for uploading
+      const uploadUrl = await ctx.storage.generateUploadUrl();
+      
+      // Return the upload URL and image ID
+      return {
+        uploadUrl,
+        imageId: args.imageId,
+        base64Data: args.base64Data
+      };
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      throw new ConvexError("Failed to generate upload URL");
+    }
+  },
+});
+
+// Update the image with the storage ID after upload
+export const updateImageWithStorageId = mutation({
+  args: {
+    imageId: v.id("images"),
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get the user identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Not authenticated");
+    }
+
+    // Find the image record
+    const image = await ctx.db.get(args.imageId);
+    if (!image) {
+      throw new ConvexError("Image not found");
+    }
+
+    // Verify the user owns this image
+    if (image.userId !== identity.subject) {
+      throw new ConvexError("Not authorized to update this image");
+    }
+
+    // Get the URL for the stored image
+    const cartoonImageUrl = await ctx.storage.getUrl(args.storageId);
+    if (!cartoonImageUrl) {
+      throw new ConvexError("Failed to get URL for uploaded image");
+    }
+    
+    // We'll handle proper image display via Content-Type on the client side
+
+    // Update the image record with the storage ID and URL
+    await ctx.db.patch(args.imageId, {
+      cartoonStorageId: args.storageId,
+      cartoonImageUrl: cartoonImageUrl,
       status: "completed",
-      cartoonStorageId: cartoonStorageId,
-      cartoonImageUrl: cartoonImageUrl || undefined, // Handle the case where URL could be null
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return cartoonImageUrl;
   },
 });
 
@@ -145,11 +329,11 @@ export const storeUser = mutation({
       .query("users")
       .withIndex("by_user_id", (q) => q.eq("userId", args.clerkId))
       .unique();
-    
+
     if (existingUser) {
       return existingUser._id;
     }
-    
+
     // Create a new user
     const userId = await ctx.db.insert("users", {
       name: args.name,
@@ -157,7 +341,7 @@ export const storeUser = mutation({
       userId: args.clerkId,
       createdAt: Date.now(),
     });
-    
+
     return userId;
   },
 });

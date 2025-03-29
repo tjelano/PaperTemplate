@@ -13,9 +13,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as chat from "../chat.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as image from "../image.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -28,9 +28,9 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  chat: typeof chat;
   files: typeof files;
   http: typeof http;
+  image: typeof image;
   transactions: typeof transactions;
   users: typeof users;
 }>;
