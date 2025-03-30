@@ -22,7 +22,7 @@ export const Route = createRootRoute({
                     </Link>
                     <nav className="ml-auto flex items-center justify-center space-x-4">
                         <Link to="/dashboard">
-                            <Button variant="ghost" size="sm" className="text-[var(--color-neutral-800)] hover:bg-[var(--color-primary)]/5 hover:text-[var(--color-primary-dark)]">Dashboard</Button>
+                            <Button variant="ghost" size="sm" className="text-[var(--color-neutral-800)] hover:cursor-pointer hover:bg-[var(--color-primary)]/5 hover:text-[var(--color-primary-dark)]">Dashboard</Button>
                         </Link>
                         <SignedIn>
                             <div className="flex items-center gap-3">

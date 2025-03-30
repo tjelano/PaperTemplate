@@ -12,7 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardImport } from './routes/dashboard'
-import { Route as IndexImport } from './routes/index'
+import { Route as IndexImport } from './routes/home'
 import { Route as CreditsImport } from './routes/credits'
 import { Route as SuccessImport } from './routes/success'
 

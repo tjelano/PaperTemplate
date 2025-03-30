@@ -33,7 +33,7 @@ export function UserCredits() {
         variant="outline" 
         size="sm" 
         onClick={() => navigate({ to: "/credits" })}
-        className="border-[var(--color-primary)]/20 hover:bg-[var(--color-primary)]/5 text-[var(--color-neutral-800)] hover:text-[var(--color-primary)] rounded-xl"
+        className="border-[var(--color-primary)]/20 hover:bg-[var(--color-primary)]/5 text-[var(--color-neutral-800)] hover:cursor-pointer hover:text-[var(--color-primary)] rounded-xl"
       >
         <span className="flex items-center gap-1">
           <Sparkles className="h-4 w-4 mr-1 text-[var(--color-accent)]" />

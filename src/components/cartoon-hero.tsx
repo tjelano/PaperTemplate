@@ -17,7 +17,7 @@ export default function CartoonHero() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageId, setImageId] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [cartoonStyle, setCartoonStyle] = useState<string>("studio-ghibli")
+  const [cartoonStyle, setCartoonStyle] = useState<string>("simpsons")
 
   // Query to check if user has any processing images
   const userProcessingImages = useQuery(api.files.getUserProcessingImages, 
@@ -27,7 +27,7 @@ export default function CartoonHero() {
   // Update processing state based on database
   useEffect(() => {
     if (userProcessingImages && userProcessingImages.length > 0) {
-      // Get the first processing image
+      // Get the first processing image∏
       const processingImage = userProcessingImages[0];
       
       // Set processing state
@@ -198,7 +198,7 @@ export default function CartoonHero() {
             <p>Your image is being processed.</p>
             <p>You can safely refresh or come back to it later in your dashboard.</p>
             <Button 
-              className="mt-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white text-xs py-1 px-3"
+              className="mt-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] hover:cursor-pointer text-white text-xs py-1 px-3"
               onClick={() => window.location.href = "/dashboard"}
             >
               Go to Dashboard
@@ -413,7 +413,7 @@ export default function CartoonHero() {
                     value={cartoonStyle}
                     onValueChange={(value) => setCartoonStyle(value)}
                   >
-                    <SelectTrigger className="w-full h-11 rounded-lg border-[var(--color-neutral-200)] hover:border-[var(--color-primary)] transition-colors">
+                    <SelectTrigger className="w-full h-11 rounded-lg border-[var(--color-neutral-200)] hover:border-[var(--color-primary)] hover:cursor-pointer transition-colors">
                       <SelectValue placeholder="Select a style" />
                     </SelectTrigger>
                     <SelectContent>
