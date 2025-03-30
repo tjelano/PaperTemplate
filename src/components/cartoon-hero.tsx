@@ -52,11 +52,9 @@ export default function CartoonHero() {
   
   // Available cartoon styles
   const cartoonStyles = [
-    { id: "studio-ghibli", name: "Studio Ghibli" },
     { id: "simpsons", name: "Simpsons" },
     { id: "family-guy", name: "Family Guy" },
     { id: "disney", name: "Disney" },
-    { id: "pixar", name: "Pixar" },
     { id: "anime", name: "Anime" },
     { id: "comic-book", name: "Comic Book" },
     { id: "south-park", name: "South Park" }
@@ -117,6 +115,9 @@ export default function CartoonHero() {
         console.log("Setting cartoon image from database:", imageDetails.cartoonImageUrl);
         setCartoonImage(imageDetails.cartoonImageUrl);
         setIsProcessing(false);
+        // Clear the imageId so it doesn't keep querying the database
+        setImageId(null);
+        // Keep the original image for comparison with the cartoon
       } else if (imageDetails.status === "processing" && imageDetails.cartoonImageUrl === "data:image/png;base64,PENDING_UPLOAD") {
         // This is a special marker that indicates the image is being processed
         // but the actual data is too large to store in the database
@@ -126,6 +127,8 @@ export default function CartoonHero() {
         console.error("Error processing image");
         setIsProcessing(false);
         setUploadError("There was an error processing your image. Please try again.");
+        // Clear state on error
+        setImageId(null);
       }
     }
   }, [imageDetails])
@@ -446,7 +449,19 @@ export default function CartoonHero() {
                         <Download className="mr-1.5 h-5 w-5" /> Download
                       </Button>
                       
-    
+                      <Button
+                        variant="default"
+                        className="flex-1 h-12 text-md font-medium rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                        onClick={() => {
+                          // Clear all states to start fresh
+                          setImage(null);
+                          setCartoonImage(null);
+                          setImageId(null);
+                          setUploadError(null);
+                        }}
+                      >
+                        Create New
+                      </Button>
                     </div>
                   )}
                 </div>

@@ -88,7 +88,7 @@ export const ImageGen = internalAction({
         console.log("[ImageGen] Preparing content for Gemini API");
 
         const contents = [
-            { text: `Turn this image into a ${args.style} style image` },
+            { text: `Hi, you are a professional artist contracted by a user to turn thier image into a ${args.style} image` },
             {
                 inlineData: {
                     mimeType: 'image/png',
