@@ -225,42 +225,43 @@ export default function CartoonHero() {
     <div className="min-h-screen bg-[var(--color-neutral-50)] ">
       <main className="w-full py-12 px-4">
         {/* Hero Section */}
-        <div className="mx-auto max-w-2xl text-center mb-14">
-          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-6">
+        <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-14 px-4 sm:px-0">
+          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-4 sm:mb-6">
             <span className="text-sm font-medium text-[var(--color-primary)]">
               Transform your photos instantly
             </span>
           </div>
-          <h1 className="text-3xl font-bold md:text-5xl tracking-tight text-[var(--color-neutral-900)] text-balance">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-[var(--color-neutral-900)] text-balance">
             Bag yourself a cartoon version in seconds.
           </h1>
-          <p className="mt-6 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
+          <p className="mt-4 sm:mt-6 text-sm sm:text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
             Minimalist cartoon transformations, powered by AI. Clean. Fast. Free.
           </p>
         </div>
 
         {/* Image Transformation Section */}
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="relative rounded-xl shadow-sm border border-[var(--color-neutral-100)] overflow-hidden card">
             
             {/* Image transformation studio */}
             <div className="relative z-10 py-6">
               {/* Image headers */}
-              <div className="flex justify-between mb-2 px-4">
-                <div className="flex items-center pl-5">
+              <div className="flex justify-between mb-2 px-4 sm:px-8">
+                <div className="flex items-center">
                   <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] mr-2"></div>
                   <span className="text-sm font-medium text-[var(--color-neutral-800)]">Original Photo</span>
                 </div>
-                <div className="flex items-center pr-5">
+                <div className="sm:hidden"></div> {/* Spacer for mobile */}
+                <div className="items-center hidden sm:flex">
                   <span className="text-sm font-medium text-[var(--color-neutral-800)]">Cartoon Version</span>
                   <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] ml-2"></div>
                 </div>
               </div>
               
               {/* Main content area */}
-              <div className="flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-0 sm:gap-0">
                 {/* Left side - Original image */}
-                <div className="w-[42%]">
+                <div className="w-full sm:w-[42%]">
                   <div className="aspect-square overflow-hidden rounded-xl relative border border-neutral-100 bg-white">
                     {image ? (
                       <img src={image} alt="Original" className="absolute inset-0 h-full w-full object-cover" />
@@ -355,16 +356,22 @@ export default function CartoonHero() {
                 </div>
                 
                 {/* Middle - Transformation arrow */}
-                <div className="flex items-center justify-center mx-2">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-primary)] text-white shadow-md">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div className="flex items-center justify-center mx-2 my-1 sm:my-0 transform sm:transform-none rotate-90 sm:rotate-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-[var(--color-primary)] text-white shadow-md">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 </div>
 
+                {/* Mobile label for Cartoon Version */}
+                <div className="flex items-center justify-center w-full sm:hidden mb-2">
+                  <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] mr-2"></div>
+                  <span className="text-sm font-medium text-[var(--color-neutral-800)]">Cartoon Version</span>
+                </div>
+
                 {/* Right side - Cartoon result */}
-                <div className="w-[42%]">
+                <div className="w-full sm:w-[42%]">
                   <div className="aspect-square overflow-hidden rounded-xl relative border border-neutral-100 bg-white">
                     {cartoonImage ? (
                       <img
@@ -398,9 +405,9 @@ export default function CartoonHero() {
               </div>
               
               {/* Style selector and action buttons row */}
-              <div className="mt-4 flex flex-col items-center space-y-3">
+              <div className="mt-3 sm:mt-4 flex flex-col items-center space-y-3 px-2 sm:px-0">
                 {/* Style selector */}
-                <div className="w-full max-w-md">
+                <div className="w-full max-w-md px-2">
                   <label className="block text-xs font-medium text-[var(--color-neutral-700)] mb-1 ml-1">Select Cartoon Style</label>
                   <Select
                     value={cartoonStyle}
@@ -420,7 +427,7 @@ export default function CartoonHero() {
                 </div>
                 
                 {/* Action buttons */}
-                <div className="flex gap-2 w-full max-w-md">
+                <div className="flex gap-2 w-full max-w-md px-2">
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -432,10 +439,10 @@ export default function CartoonHero() {
 
 
                   {cartoonImage && (
-                    <div className="flex gap-2 w-full">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full">
                       <Button
                         variant="outline"
-                        className="flex-1 h-12 text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                        className="flex-1 h-12 text-sm sm:text-md font-medium rounded-lg border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
                         onClick={() => {
                           // Download the image - we need to force the correct content type
                           const link = document.createElement('a');
@@ -451,7 +458,7 @@ export default function CartoonHero() {
                       
                       <Button
                         variant="default"
-                        className="flex-1 h-12 text-md font-medium rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+                        className="flex-1 h-12 text-sm sm:text-md font-medium rounded-lg bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 mt-2 sm:mt-0"
                         onClick={() => {
                           // Clear all states to start fresh
                           setImage(null);
@@ -470,7 +477,7 @@ export default function CartoonHero() {
           </div>
 
           {/* Style preview indicator */}
-          <div className="mt-6 text-center">
+          <div className="mt-4 sm:mt-6 text-center">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-neutral-700)] bg-[var(--color-neutral-100)] px-3 py-1 rounded-full">
               <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
               Selected style: {cartoonStyles.find(style => style.id === cartoonStyle)?.name}
@@ -478,7 +485,7 @@ export default function CartoonHero() {
           </div>
           
           {!isSignedIn && (
-            <div className="mt-8 text-center bg-white rounded-2xl p-6 shadow-md max-w-md mx-auto border border-[var(--color-neutral-100)] card">
+            <div className="mt-5 sm:mt-8 text-center bg-white rounded-2xl p-4 sm:p-6 shadow-md max-w-md mx-auto border border-[var(--color-neutral-100)] card">
               <div className="mb-3 mx-auto w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -498,21 +505,21 @@ export default function CartoonHero() {
           )}
         </div>
         {/* Pricing Section */}
-        <div className="text-center mx-auto max-w-2xl mb-12 mt-16">
-          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-6">
+        <div className="text-center mx-auto max-w-2xl mb-8 sm:mb-12 mt-12 sm:mt-16 px-4 sm:px-0">
+          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-4 sm:mb-6">
             <span className="text-sm font-medium text-[var(--color-primary)]">
               Choose Your Plan
             </span>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-neutral-900)] text-balance">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-neutral-900)] text-balance">
             No Frills. Just Cartoons.
           </h2>
-          <p className="mt-4 text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
             Get unlimited access to our AI cartoon transformation technology with our simple pricing options.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto px-4 sm:px-6">
           {plans?.items?.map((product: any) => (
             product.prices.map((price: any) => (
               <Credits
