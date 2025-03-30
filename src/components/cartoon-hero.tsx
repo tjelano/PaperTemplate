@@ -473,7 +473,7 @@ export default function CartoonHero() {
           <div className="mt-6 text-center">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-neutral-700)] bg-[var(--color-neutral-100)] px-3 py-1 rounded-full">
               <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
-              Selected style: {cartoonStyles.find(style => style.id === cartoonStyle)?.name || "Minimalist"}
+              Selected style: {cartoonStyles.find(style => style.id === cartoonStyle)?.name}
             </span>
           </div>
           
