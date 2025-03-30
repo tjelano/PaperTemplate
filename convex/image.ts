@@ -88,15 +88,34 @@ export const ImageGen = internalAction({
         console.log("[ImageGen] Preparing content for Gemini API");
 
         const contents = [
-            { text: `Hi, you are a professional artist contracted by a user to turn thier image into a ${args.style} image` },
             {
-                inlineData: {
-                    mimeType: 'image/png',
-                    data: imageBase64 as string
-                }
+                role: "user",
+                parts: [
+                    {
+                        text: `You are a world-class professional artist specializing in ${args.style} transformations.
+                
+        Your task is to transform the provided photograph into a high-quality ${args.style} artwork with these specific requirements:
+                
+        1. MOST IMPORTANT: Maintain accurate facial likeness - the cartoon MUST look like the exact same person in the photo
+        2. CRITICAL: Preserve the person's racial characteristics and identity without alteration
+        3. Accurately capture distinctive features including: face shape, hairstyle, eyebrows, nose structure, mouth/smile, and facial expression
+        4. Match the person's actual skin tone appropriately (DO NOT use default ${args.style} skin colors if they would change the person's race)
+        5. Include the same clothing/accessories as in the original image
+        6. Keep the background theme consistent with the original
+        7. Use the characteristic ${args.style} aesthetic while preserving the person's identity
+        8. Create a polished, professional result that is instantly recognizable as the same person
+        
+        Your primary goal is to make a cartoon that is immediately recognizable as this specific individual with their racial identity preserved.`
+                    },
+                    {
+                        inlineData: {
+                            mimeType: 'image/png',
+                            data: imageBase64
+                        }
+                    }
+                ]
             }
         ];
-
         try {
             console.log("[ImageGen] Sending request to Gemini API");
             // Set responseModalities to include "Image" so the model can generate an image
