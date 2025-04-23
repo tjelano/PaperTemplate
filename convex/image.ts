@@ -43,20 +43,16 @@ export const ImageGen = internalAction({
             7. Use the characteristic ${args.style} aesthetic while preserving the person's identity
             8. Create a polished, professional result that is instantly recognizable as the same person`;
 
-            console.log("[ImageGen] Sending request to OpenAI API");
-
             // Fetch the image data
             const imageResponse = await fetch(args.imageUrl);
             const imageBuffer = await imageResponse.arrayBuffer();
-            
+
             // Convert to File object with proper metadata that OpenAI expects
             const file = new File(
                 [new Uint8Array(imageBuffer)],
                 "image.png",
                 { type: "image/png" }
             );
-            
-            console.log('[ImageGen] Image fetched successfully and converted to File');
 
             // Call OpenAI's image generation API with the source image
             const response = await openai.images.edit({
@@ -65,12 +61,9 @@ export const ImageGen = internalAction({
                 prompt: prompt,
             });
 
-            console.log("[ImageGen] Received response from OpenAI API");
-
             // Get the base64 image data from response
             const imageData = response.data?.[0].b64_json;
             if (!imageData) {
-                console.error("[ImageGen] Image data is undefined");
                 if (imageRecord) {
                     await ctx.runMutation(internal.image.updateImageStatus, {
                         imageId: imageRecord._id,
@@ -81,14 +74,10 @@ export const ImageGen = internalAction({
                 return new ConvexError("No image data found in response");
             }
 
-            console.log(`[ImageGen] Image data length: ${imageData.length} characters`);
-
             // Format the image data with proper data URL prefix
             const processedImageData = `data:image/png;base64,${imageData}`;
-            console.log(`[ImageGen] Added data URL prefix to image data`);
 
             // Call a mutation to store the image in the database
-            console.log("[ImageGen] Calling mutation to store image in database");
             const imageId: Id<"images"> = await ctx.runMutation(internal.image.storeCartoonImage, {
                 userId: args.userId,
                 originalStorageId: args.imageUrl,
@@ -96,7 +85,6 @@ export const ImageGen = internalAction({
                 cartoonImageData: processedImageData,
             });
 
-            console.log(`[ImageGen] Image successfully stored with ID: ${imageId}`);
             return imageId;
 
         } catch (error: any) {
@@ -152,7 +140,6 @@ export const updateImageStatus = internalMutation({
         errorMessage: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        console.log(`[updateImageStatus] Updating image ${args.imageId} to status: ${args.status}`);
 
         // Only update status and timestamp, as errorMessage is not in the schema
         const updateData = {
@@ -166,7 +153,6 @@ export const updateImageStatus = internalMutation({
         }
 
         await ctx.db.patch(args.imageId, updateData);
-        console.log(`[updateImageStatus] Successfully updated image status`);
 
         return { success: true };
     },
@@ -179,7 +165,6 @@ export const directlyUploadImage = internalAction({
         uploadUrl: v.string(),
     },
     handler: async (ctx, args): Promise<void> => {
-        console.log(`[directlyUploadImage] Starting direct upload for image ${args.imageId}`);
 
         try {
             // Create form data for upload
@@ -198,7 +183,6 @@ export const directlyUploadImage = internalAction({
 
             // Use a more reliable base64 to binary conversion
             // This is critical to ensure proper encoding of the image data
-            console.log(`[directlyUploadImage] Processing base64 data of length: ${base64.length}`);
 
             // Create a binary string from the base64
             let binaryString = '';
@@ -214,8 +198,6 @@ export const directlyUploadImage = internalAction({
             for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-
-            console.log(`[directlyUploadImage] Successfully converted base64 to binary data of length: ${bytes.length}`);
 
             // Verify the data looks valid (check for PNG signature)
             if (bytes.length > 8) {
@@ -259,30 +241,13 @@ export const directlyUploadImage = internalAction({
                 console.log(`[directlyUploadImage] First 8 bytes: ${firstBytes}`);
             }
 
-            console.log(`[directlyUploadImage] Final determined content type: ${contentType}`);
-
             // Create a blob with the detected content type
             const blob = new Blob([bytes], { type: contentType });
-
-            // This is serverless so URL.createObjectURL won't work, but we'll log useful info
-            console.log(`[directlyUploadImage] Blob size: ${blob.size} bytes`);
-            console.log(`[directlyUploadImage] Blob type: ${blob.type}`);
-
-            // If the file is small enough, let's log a few bytes to see what we're working with
-            if (bytes.length > 0 && bytes.length < 50) {
-                console.log(`[directlyUploadImage] First few bytes: ${Array.from(bytes.slice(0, Math.min(20, bytes.length))).join(',')}`);
-            }
-
-            // The issue is that FormData automatically sets a multipart/form-data Content-Type
-            // which is overriding our intended image content type
-            // Let's use a direct binary upload instead
-            console.log(`[directlyUploadImage] Uploading to Convex storage with content type: ${contentType}`);
 
             // Create a unique name for the file to avoid caching issues
             const fileExt = contentType === 'image/svg+xml' ? 'svg' :
                 contentType === 'image/jpeg' ? 'jpg' : 'png';
             const uniqueFileName = `cartoon_${Date.now()}.${fileExt}`;
-            console.log(`[directlyUploadImage] Using unique filename: ${uniqueFileName}`);
 
             // Set specific headers for proper image handling
             const response = await fetch(args.uploadUrl, {
@@ -309,8 +274,6 @@ export const directlyUploadImage = internalAction({
             const result = await response.json();
             const storageId = result.storageId;
 
-            console.log(`[directlyUploadImage] Upload successful, storage ID: ${storageId}`);
-
             // Instead of getting the URL, we'll store directly
             // We'll get the URL inside updateCartoonImageWithStorageId
 
@@ -326,11 +289,7 @@ export const directlyUploadImage = internalAction({
                 imageId: args.imageId,
                 status: "completed"
             });
-
-            console.log(`[directlyUploadImage] Image record updated with storage ID: ${storageId}`);
         } catch (error) {
-            console.error(`[directlyUploadImage] Error:`, error);
-
             // Update image status to error
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
@@ -348,8 +307,6 @@ export const uploadCartoonImage = internalAction({
         uploadUrl: v.string(),
     },
     handler: async (ctx, args): Promise<void> => {
-        console.log(`[uploadCartoonImage] Starting upload for image ${args.imageId}`);
-
         try {
             // Instead of trying to convert the base64 in the action, 
             // let's simply store a flag in the database and let the client 
@@ -364,21 +321,13 @@ export const uploadCartoonImage = internalAction({
                 throw new Error(`Image with ID ${args.imageId} not found`);
             }
 
-            console.log(`[uploadCartoonImage] Image found, marking as ready for client upload`);
-
             // Update the image record to indicate it needs client-side processing
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: args.imageId,
                 status: "needs_client_upload",
                 errorMessage: "Image requires client-side upload"
             });
-
-            console.log(`[uploadCartoonImage] Image marked as needs_client_upload`);
-
-            // We'll implement a client-side solution instead of trying to do everything server-side
-            console.log(`[uploadCartoonImage] Client will handle the upload for image ${args.imageId}`);
         } catch (error) {
-            console.error(`[uploadCartoonImage] Error:`, error);
 
             // Update the image status to error
             await ctx.runMutation(internal.image.updateImageStatus, {

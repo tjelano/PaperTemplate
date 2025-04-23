@@ -151,14 +151,6 @@ export const cartoonifyImage = mutation({
       status: "processing",
       updatedAt: Date.now(),
     });
-
-    // Call the Gemini AI to generate a cartoon version of the image
-    // The ImageGen action will:
-    // 1. Fetch the image from the URL
-    // 2. Convert it to base64
-    // 3. Send it to Gemini API for cartoonification
-    // 4. Store the result in the database
-    console.log("[cartoonifyImage] Scheduling ImageGen action with image URL:", image.originalImageUrl);
     
     try {
       // Schedule the image generation task

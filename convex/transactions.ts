@@ -51,7 +51,7 @@ const createCheckout = async ({
     return result;
 };
 
-// Get available plans - for one-time payments we'll have a single plan for 5 image generations
+// Get available plans - for one-time payments we'll have a single plan for 10 image generations
 export const getPlansPolar = action({
     handler: async () => {
         const polar = new Polar({
@@ -87,7 +87,7 @@ export const getPlansPolar = action({
     },
 });
 
-// Get a checkout URL for purchasing 5 image generations for $3
+// Get a checkout URL for purchasing 10 image generations for $3
 export const getImagePackCheckoutUrl = action({
     args: {
         priceId: v.string(),
@@ -133,9 +133,9 @@ export const getImagePackCheckoutUrl = action({
             successUrl: `${process.env.FRONTEND_URL}/success`,
             metadata: {
                 userId: user.userId,
-                // This is a one-time payment for 5 image generations
+                // This is a one-time payment for 10 image generations
                 purchaseType: "image_pack",
-                quantity: "5"
+                quantity: "10"
             }
         });
 
@@ -306,7 +306,7 @@ export const paymentWebhookHandler = mutation({
                 // Extract metadata from the order
                 const metadata = args.body.data.metadata || {};
                 const userId = metadata.userId;
-                const quantity = parseInt(metadata.quantity || "5", 10);
+                const quantity = parseInt(metadata.quantity || "10", 10);
 
                 if (!userId) {
                     console.error("Missing user information in order metadata");
