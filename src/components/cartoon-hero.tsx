@@ -503,6 +503,101 @@ export default function CartoonHero() {
             </div>
           )}
         </div>
+
+        {/* Before and After Showcase Section */}
+        <div className="text-center mx-auto max-w-2xl mb-8 sm:mb-12 mt-12 sm:mt-16 px-4 sm:px-0">
+          <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-4 sm:mb-6">
+            <span className="text-sm font-medium text-[var(--color-primary)]">
+              Transformation Examples
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-neutral-900)] text-balance">
+            Before & After Showcases
+          </h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
+            See how our AI transforms regular photos into stunning cartoon styles.
+          </p>
+        </div>
+
+        {/* Showcase Gallery */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Example 1: Simpsons Style */}
+            <div className="bg-white rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg hover:-translate-y-1 border border-[var(--color-neutral-100)]">
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="grid grid-cols-2 h-full">
+                  <div className="relative">
+                    <img 
+                      src="https://blessed-kudu-154.convex.cloud/api/storage/29584e0a-d68e-427b-9fa8-db983c4d9a02" 
+                      alt="Original portrait" 
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                      Original
+                    </div>
+                  </div>
+                  <div className="relative bg-[#FFF6D6]">
+                    <img 
+                      src="https://blessed-kudu-154.convex.cloud/api/storage/3a464c27-627c-4eb0-b6aa-99e71070a023" 
+                      alt="Simpsons style" 
+                      className="absolute inset-0 h-full w-full object-cover mix-blend-multiply"
+                    />
+                    <div className="absolute top-2 right-2 bg-[var(--color-primary)] text-white text-xs font-medium px-2 py-1 rounded">
+                      Family Guy
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium text-[var(--color-neutral-800)]">
+                  Family Guy Style
+                </h3>
+                <p className="text-xs text-[var(--color-neutral-600)] mt-1">
+                  Iconic and distinctive Family Guy art style
+                </p>
+              </div>
+            </div>
+
+            {/* Example 2: Anime Style */}
+            <div className="bg-white rounded-xl overflow-hidden shadow-md transition-all hover:shadow-lg hover:-translate-y-1 border border-[var(--color-neutral-100)]">
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <div className="grid grid-cols-2 h-full">
+                  <div className="relative">
+                    <img 
+                      src="https://blessed-kudu-154.convex.cloud/api/storage/37f27d22-9f24-470b-a568-620d16792393" 
+                      alt="Original portrait" 
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded">
+                      Original
+                    </div>
+                  </div>
+                  <div className="relative bg-[#F8F9FF]">
+                    <img 
+                      src="https://blessed-kudu-154.convex.cloud/api/storage/2554ac09-b5b6-4a2e-a2a9-0e38bf6818d5" 
+                      alt="Studio Ghibli style" 
+                      className="absolute inset-0 h-full w-full object-cover mix-blend-multiply"
+                    />
+                    <div className="absolute top-2 right-2 bg-[var(--color-primary)] text-white text-xs font-medium px-2 py-1 rounded">
+                      Studio Ghibli
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium text-[var(--color-neutral-800)]">
+                  Studio Ghibli Style
+                </h3>
+                <p className="text-xs text-[var(--color-neutral-600)] mt-1">
+                  Iconic and distinctive Studio Ghibli art style
+                </p>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+
         {/* Pricing Section */}
         <div className="text-center mx-auto max-w-2xl mb-8 sm:mb-12 mt-12 sm:mt-16 px-4 sm:px-0">
           <div className="inline-flex items-center gap-2 rounded-[20px] bg-[var(--color-primary)]/10 px-4 py-2 mb-4 sm:mb-6">
