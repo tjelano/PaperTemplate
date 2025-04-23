@@ -1,8 +1,9 @@
-import { GoogleGenAI } from "@google/genai";
 import { ConvexError, v } from "convex/values";
 import { internalAction, internalMutation, internalQuery, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+
+import OpenAI from "openai";
 
 export const ImageGen = internalAction({
     args: {
@@ -11,180 +12,99 @@ export const ImageGen = internalAction({
         style: v.string(),
     },
     handler: async (ctx, args): Promise<Id<"images"> | ConvexError<string>> => {
-        console.log("[ImageGen] Starting image generation process");
         console.log(`[ImageGen] Image URL: ${args.imageUrl}`);
 
-        if (!process.env.GEMINI_API_KEY) {
-            console.error("[ImageGen] GEMINI_API_KEY is not set in environment variables");
+        if (!process.env.OPENAI_API_KEY) {
             throw new ConvexError("API key not configured");
         }
-
-        console.log("[ImageGen] Processing image URL");
 
         // Find the image record to update status in case of error
         const imageRecord = await ctx.runQuery(internal.image.getImageByUrl, {
             imageUrl: args.imageUrl
         });
 
-        // We need to download the image and convert it to base64
-        console.log("[ImageGen] Fetching image data from URL");
-        let imageBase64;
         try {
+            // Initialize OpenAI with API key
+            const openai = new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+            });
+
+            // Create the prompt for the specific style transformation
+            const prompt = `You are a world-class professional artist specializing in ${args.style} transformations.
+                
+            Your task is to transform the input photograph into a high-quality ${args.style} artwork with these specific requirements:
+                    
+            1. MOST IMPORTANT: Maintain accurate facial likeness - the result MUST look like the exact same person in the photo
+            2. CRITICAL: Preserve the person's racial characteristics and identity without alteration
+            3. Accurately capture distinctive features including: face shape, hairstyle, eyebrows, nose structure, mouth/smile, and facial expression
+            4. Match the person's actual skin tone appropriately
+            5. Include the same clothing/accessories as in the original image
+            6. Keep the background theme consistent with the original
+            7. Use the characteristic ${args.style} aesthetic while preserving the person's identity
+            8. Create a polished, professional result that is instantly recognizable as the same person`;
+
+            console.log("[ImageGen] Sending request to OpenAI API");
+
             // Fetch the image data
-            const response = await fetch(args.imageUrl);
-            if (!response.ok) {
-                // Update status to error if we have an image record
+            const imageResponse = await fetch(args.imageUrl);
+            const imageBuffer = await imageResponse.arrayBuffer();
+            
+            // Convert to File object with proper metadata that OpenAI expects
+            const file = new File(
+                [new Uint8Array(imageBuffer)],
+                "image.png",
+                { type: "image/png" }
+            );
+            
+            console.log('[ImageGen] Image fetched successfully and converted to File');
+
+            // Call OpenAI's image generation API with the source image
+            const response = await openai.images.edit({
+                model: "gpt-image-1",
+                image: [file],  // Pass an array containing the File object
+                prompt: prompt,
+            });
+
+            console.log("[ImageGen] Received response from OpenAI API");
+
+            // Get the base64 image data from response
+            const imageData = response.data?.[0].b64_json;
+            if (!imageData) {
+                console.error("[ImageGen] Image data is undefined");
                 if (imageRecord) {
                     await ctx.runMutation(internal.image.updateImageStatus, {
                         imageId: imageRecord._id,
                         status: "error",
-                        errorMessage: `Failed to fetch image: ${response.status} ${response.statusText}`
+                        errorMessage: "No image data found in response"
                     });
                 }
-                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+                return new ConvexError("No image data found in response");
             }
 
-            // Get the array buffer from the response
-            const arrayBuffer = await response.arrayBuffer();
+            console.log(`[ImageGen] Image data length: ${imageData.length} characters`);
 
-            // Convert to base64 using a custom implementation that works in Convex
-            // This is a simple base64 encoding implementation
-            const bytes = new Uint8Array(arrayBuffer);
-            const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-            let result = '';
+            // Format the image data with proper data URL prefix
+            const processedImageData = `data:image/png;base64,${imageData}`;
+            console.log(`[ImageGen] Added data URL prefix to image data`);
 
-            // Process 3 bytes at a time, converting to 4 base64 characters
-            for (let i = 0; i < bytes.length; i += 3) {
-                // Combine 3 bytes into a single integer
-                const byte1 = bytes[i] || 0;
-                const byte2 = i + 1 < bytes.length ? bytes[i + 1] : 0;
-                const byte3 = i + 2 < bytes.length ? bytes[i + 2] : 0;
-
-                // Split the combined integer into 4 six-bit chunks and convert to base64 characters
-                const char1 = base64Chars[byte1 >> 2];
-                const char2 = base64Chars[((byte1 & 3) << 4) | (byte2 >> 4)];
-                const char3 = i + 1 < bytes.length ? base64Chars[((byte2 & 15) << 2) | (byte3 >> 6)] : '=';
-                const char4 = i + 2 < bytes.length ? base64Chars[byte3 & 63] : '=';
-
-                result += char1 + char2 + char3 + char4;
-            }
-
-            imageBase64 = result;
-            console.log(`[ImageGen] Successfully encoded image, base64 length: ${imageBase64.length}`);
-        } catch (fetchError: any) {
-            console.error("[ImageGen] Error fetching image:", fetchError);
-            // Update status to error if we have an image record
-            if (imageRecord) {
-                await ctx.runMutation(internal.image.updateImageStatus, {
-                    imageId: imageRecord._id,
-                    status: "error",
-                    errorMessage: fetchError?.message || 'Unknown error'
-                });
-            }
-            return new ConvexError(`Failed to fetch image: ${fetchError?.message || 'Unknown error'}`);
-        }
-
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        console.log("[ImageGen] Preparing content for Gemini API");
-
-        const contents = [
-            {
-                role: "user",
-                parts: [
-                    {
-                        text: `You are a world-class professional artist specializing in ${args.style} transformations.
-                
-        Your task is to transform the provided photograph into a high-quality ${args.style} artwork with these specific requirements:
-                
-        1. MOST IMPORTANT: Maintain accurate facial likeness - the cartoon MUST look like the exact same person in the photo
-        2. CRITICAL: Preserve the person's racial characteristics and identity without alteration
-        3. Accurately capture distinctive features including: face shape, hairstyle, eyebrows, nose structure, mouth/smile, and facial expression
-        4. Match the person's actual skin tone appropriately (DO NOT use default ${args.style} skin colors if they would change the person's race)
-        5. Include the same clothing/accessories as in the original image
-        6. Keep the background theme consistent with the original
-        7. Use the characteristic ${args.style} aesthetic while preserving the person's identity
-        8. Create a polished, professional result that is instantly recognizable as the same person
-        
-        Your primary goal is to make a cartoon that is immediately recognizable as this specific individual with their racial identity preserved.`
-                    },
-                    {
-                        inlineData: {
-                            mimeType: 'image/png',
-                            data: imageBase64
-                        }
-                    }
-                ]
-            }
-        ];
-        try {
-            console.log("[ImageGen] Sending request to Gemini API");
-            // Set responseModalities to include "Image" so the model can generate an image
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash-exp-image-generation',
-                contents: contents,
-                config: {
-                    responseModalities: ['Text', 'Image']
-                },
+            // Call a mutation to store the image in the database
+            console.log("[ImageGen] Calling mutation to store image in database");
+            const imageId: Id<"images"> = await ctx.runMutation(internal.image.storeCartoonImage, {
+                userId: args.userId,
+                originalStorageId: args.imageUrl,
+                originalImageUrl: args.imageUrl,
+                cartoonImageData: processedImageData,
             });
-            console.log("[ImageGen] Response from Gemini API:", JSON.stringify(response, null, 2));
-            console.log("[ImageGen] Received response from Gemini API");
-            console.log(`[ImageGen] Processing response parts: ${response?.candidates?.[0]?.content?.parts?.length || 0} parts found`);
 
-            for (const part of response?.candidates?.[0]?.content?.parts || []) {
-                // Based on the part type, either show the text or save the image
-                if (part.text) {
-                    console.log(`[ImageGen] Text response: ${part.text}`);
-                } else if (part.inlineData) {
-                    console.log("[ImageGen] Image data received in response");
-                    const imageData = part.inlineData.data;
-                    if (!imageData) {
-                        console.error("[ImageGen] Image data is undefined");
-                        continue;
-                    }
-
-                    console.log(`[ImageGen] Image data length: ${imageData.length} characters`);
-                    console.log(`[ImageGen] Image data type: ${part.inlineData.mimeType}`);
-
-                    // Sometimes the data doesn't include a proper prefix
-                    // Let's ensure it has the correct data: prefix based on the mime type
-                    let processedImageData = imageData;
-                    if (!processedImageData.startsWith('data:')) {
-                        const mimeType = part.inlineData.mimeType || 'image/png';
-                        processedImageData = `data:${mimeType};base64,${imageData}`;
-                        console.log(`[ImageGen] Added data URL prefix to image data`);
-                    }
-
-                    // Call a mutation to store the image in the database
-                    console.log("[ImageGen] Calling mutation to store image in database");
-                    const imageId: Id<"images"> = await ctx.runMutation(internal.image.storeCartoonImage, {
-                        userId: args.userId,
-                        originalStorageId: args.imageUrl,
-                        originalImageUrl: args.imageUrl,
-                        cartoonImageData: processedImageData,
-                    });
-
-                    console.log(`[ImageGen] Image successfully stored with ID: ${imageId}`);
-                    return imageId;
-                }
-            }
-
-            // If we get here, no image was found in the response
-            console.error("[ImageGen] No image data found in Gemini API response");
-            // Update status to error if we have an image record
-            if (imageRecord) {
-                await ctx.runMutation(internal.image.updateImageStatus, {
-                    imageId: imageRecord._id,
-                    status: "error",
-                    errorMessage: "No image data found in response"
-                });
-            }
-            return new ConvexError("No image data found in response");
+            console.log(`[ImageGen] Image successfully stored with ID: ${imageId}`);
+            return imageId;
 
         } catch (error: any) {
             console.error("[ImageGen] Error generating content:", error);
             console.error("[ImageGen] Error details:", error?.message || "Unknown error");
             console.error("[ImageGen] Error stack:", error?.stack || "No stack trace");
             console.error("[ImageGen] Failed to generate or store image after all processing");
+
             // Update status to error if we have an image record
             if (imageRecord) {
                 await ctx.runMutation(internal.image.updateImageStatus, {

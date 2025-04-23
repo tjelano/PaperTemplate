@@ -74,8 +74,6 @@ export default function CartoonHero() {
   }, [getPlansAction]);
 
 
-  // We'll use messages to trigger cartoonification instead of extracting images directly
-
   // Convex mutations and queries
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
   const saveUploadedImage = useMutation(api.files.saveUploadedImage)
@@ -194,7 +192,7 @@ export default function CartoonHero() {
         
         // Show toast notification with dashboard button that stays open until closed
         addToast(
-          <div className="space-y-2">
+          <div className="space-y-2 ">
             <p>Your image is being processed.</p>
             <p>You can safely refresh or come back to it later in your dashboard.</p>
             <Button 
