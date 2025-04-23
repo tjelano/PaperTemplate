@@ -5,6 +5,7 @@ import './index.css'
 import './styles/brand.css'
 import './styles/animations.css'
 import { ToastProvider } from './components/ui/toast'
+import { Analytics } from '@vercel/analytics/react';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -41,6 +42,7 @@ if (!rootElement.innerHTML) {
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <ToastProvider>
             <RouterProvider router={router} />
+            <Analytics />
           </ToastProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>
