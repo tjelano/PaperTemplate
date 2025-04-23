@@ -41,8 +41,7 @@ function CreditsPage() {
                     Bag More Cartoon Credits
                 </h1>
                 <p className="text-xl text-[var(--color-neutral-600)] max-w-2xl mx-auto">
-                    Transform your photos into minimalist cartoon art with our AI-powered platform. 
-                    No frills, just results.
+                    Transform your photos into your favourite cartoon style.
                 </p>
             </div>
 
@@ -67,8 +66,8 @@ function CreditsPage() {
                 <h2 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-4 font-heading">Why Choose PaperBag?</h2>
                 <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <h3 className="text-lg font-medium text-[var(--color-neutral-800)]">Minimalist Style</h3>
-                        <p className="text-[var(--color-neutral-600)]">Our AI creates clean, black & white cartoon transformations with a distinctive style.</p>
+                        <h3 className="text-lg font-medium text-[var(--color-neutral-800)]">Cartoon Style</h3>
+                        <p className="text-[var(--color-neutral-600)]">Our AI creates cartoon-style transformations with a distinctive style.</p>
                     </div>
                     <div className="space-y-2">
                         <h3 className="text-lg font-medium text-[var(--color-neutral-800)]">Fast Processing</h3>
@@ -89,7 +88,7 @@ function CreditsPage() {
                 <p className="text-sm text-[var(--color-neutral-600)]">
                     All plans include our core features. Upgrade anytime to access premium capabilities.
                     <br />
-                    Questions? <a href="mailto:support@paperbag.com" className="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] hover:underline">Contact our support team</a>
+                    Questions? <a href="https://x.com/rasmickyy" target='_blank' className="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] hover:underline">Contact our support team</a>
                 </p>
             </div>
         </div>
