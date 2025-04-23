@@ -53,6 +53,7 @@ export default function CartoonHero() {
   // Available cartoon styles
   const cartoonStyles = [
     { id: "simpsons", name: "Simpsons" },
+    { id: "studio-ghibli", name: "Studio Ghibli" },
     { id: "family-guy", name: "Family Guy" },
     { id: "disney", name: "Disney" },
     { id: "anime", name: "Anime" },
@@ -233,7 +234,7 @@ export default function CartoonHero() {
             Bag yourself a cartoon version in seconds.
           </h1>
           <p className="mt-4 sm:mt-6 text-sm sm:text-base text-[var(--color-neutral-600)] max-w-lg mx-auto leading-relaxed">
-            Minimalist cartoon transformations, powered by AI. Clean. Fast. Free.
+            Minimalist cartoon transformations, powered by AI.
           </p>
         </div>
 
