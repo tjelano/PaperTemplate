@@ -32,7 +32,7 @@ export function Credits({ price }: any) {
       <div className="space-y-6">
         <div>
           <h3 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-2 font-heading">
-            5 Image Generations
+            10 Image Generations
           </h3>
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-medium text-[var(--color-primary)]">
@@ -42,14 +42,14 @@ export function Credits({ price }: any) {
         </div>
 
         <p className="text-base text-[var(--color-neutral-600)] leading-relaxed">
-          One-time payment for 5 cartoon image transformations
+          One-time payment for 10 cartoon image transformations
         </p>
 
         <ul className="space-y-4">
           <li className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-[var(--color-primary)]" />
             <span className="text-base text-[var(--color-neutral-800)]">
-              5 high-quality cartoon transformations
+              10 high-quality cartoon transformations
             </span>
           </li>
           <li className="flex items-center gap-3">
