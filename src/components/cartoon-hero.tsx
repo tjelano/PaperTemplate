@@ -575,21 +575,21 @@ export default function CartoonHero() {
                   <div className="relative bg-[#F8F9FF]">
                     <img 
                       src="https://blessed-kudu-154.convex.cloud/api/storage/2554ac09-b5b6-4a2e-a2a9-0e38bf6818d5" 
-                      alt="Studio Ghibli style" 
+                      alt="Simpsons style" 
                       className="absolute inset-0 h-full w-full object-cover mix-blend-multiply"
                     />
                     <div className="absolute top-2 right-2 bg-[var(--color-primary)] text-white text-xs font-medium px-2 py-1 rounded">
-                      Studio Ghibli
+                      Simpsons
                     </div>
                   </div>
                 </div>
               </div>
               <div className="p-4">
                 <h3 className="font-medium text-[var(--color-neutral-800)]">
-                  Studio Ghibli Style
+                  Simpsons Style
                 </h3>
                 <p className="text-xs text-[var(--color-neutral-600)] mt-1">
-                  Iconic and distinctive Studio Ghibli art style
+                  Iconic and distinctive Simpsons art style
                 </p>
               </div>
             </div>
