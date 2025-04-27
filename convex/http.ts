@@ -1,5 +1,4 @@
 import { httpRouter } from "convex/server";
-import { ConvexError } from "convex/values";
 import { httpAction } from "./_generated/server";
 import { paymentWebhook } from "./transactions";
 
@@ -32,40 +31,5 @@ http.route({
     handler: paymentWebhook,
   });
   
-
-// Add a route to handle image file uploads
-http.route({
-  path: "/api/process-cartoon",
-  method: "POST",
-  handler: httpAction(async (_ctx, _request) => {
-    try {
-      // In a production implementation this would:
-      // 1. Get the image from the request body
-      // 2. Process the image through cartoon API (or ML model)
-      // 3. Return the processed image
-      
-      // For this demo, we'll just simulate processing with a placeholder
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    } catch (error) {
-      return new Response(
-        JSON.stringify({ 
-          error: error instanceof ConvexError ? error.message : "Unknown error occurred" 
-        }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-  }),
-});
-
 // Convex expects the router to be the default export of `convex/http.js`.
 export default http;
