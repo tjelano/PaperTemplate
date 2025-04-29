@@ -51,7 +51,6 @@ Paperbag is a powerful web application that transforms ordinary photos into vari
 
 ### AI Integration
 - **Image Processing**: [OpenAI](https://openai.com)
-- **Text Generation**: [Google Gemini](https://ai.google.dev/)
 
 ### DevOps
 - **Build Tool**: [Vite](https://vitejs.dev/)
