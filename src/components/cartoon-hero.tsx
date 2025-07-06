@@ -111,11 +111,11 @@ export default function CartoonHero() {
   useEffect(() => {
     if (imageDetails) {
       if (imageDetails.status === "completed" && imageDetails.cartoonImageUrl) {
-        console.log("Setting cartoon image from database:", imageDetails.cartoonImageUrl);
+        console.log("Frontend received cartoonImageUrl:", imageDetails.cartoonImageUrl);
         setCartoonImage(imageDetails.cartoonImageUrl);
         setIsProcessing(false);
-        // Clear the imageId so it doesn't keep querying the database
-        setImageId(null);
+        // Do NOT clear imageId here
+        // setImageId(null);
         // Keep the original image for comparison with the cartoon
       } else if (imageDetails.status === "processing" && imageDetails.cartoonImageUrl === "data:image/png;base64,PENDING_UPLOAD") {
         // This is a special marker that indicates the image is being processed

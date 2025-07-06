@@ -186,6 +186,7 @@ export const updateImageWithCartoonUrl = internalMutation({
             updatedAt: Date.now(),
         });
 
+        console.log(`[updateImageWithCartoonUrl] cartoonImageUrl saved: ${args.cartoonImageUrl}`);
         console.log(`[updateImageWithCartoonUrl] Image successfully updated`);
         return { success: true };
     },
