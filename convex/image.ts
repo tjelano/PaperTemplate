@@ -16,11 +16,10 @@ export const ImageGen = internalAction({
         style: v.string(),
     },
     handler: async (ctx, args): Promise<Id<"images"> | ConvexError<string>> => {
-        console.log(`[ImageGen] Starting image generation for URL: ${args.imageUrl}`);
-        console.log(`[ImageGen] Style: ${args.style}`);
-        console.log(`[ImageGen] User ID: ${args.userId}`);
+        console.log(`[ImageGen] START for imageUrl: ${args.imageUrl}, userId: ${args.userId}, style: ${args.style}`);
 
         if (!process.env.REPLICATE_API_TOKEN) {
+            console.error("[ImageGen] ERROR: Replicate API token not configured");
             throw new ConvexError("Replicate API token not configured");
         }
 
@@ -30,6 +29,7 @@ export const ImageGen = internalAction({
         });
 
         if (!imageRecord) {
+            console.error("[ImageGen] ERROR: Image record not found for imageUrl:", args.imageUrl);
             throw new ConvexError("Image record not found");
         }
 
@@ -48,17 +48,29 @@ export const ImageGen = internalAction({
                 output_format: "jpg",
                 safety_tolerance: 2
             };
+            console.log('[ImageGen] Replicate input:', JSON.stringify(input));
 
-            console.log(`[ImageGen] Calling Replicate with input prompt: ${input.prompt}`);
-
-            // Call FLUX.1 Kontext Pro model
-            const output = await replicate.run(
-                "black-forest-labs/flux-kontext-pro",
-                { input }
-            );
-
-            // Log the raw output for debugging
-            console.log('[ImageGen] Raw Replicate output:', JSON.stringify(output));
+            let output;
+            try {
+                output = await replicate.run(
+                    "black-forest-labs/flux-kontext-pro",
+                    { input }
+                );
+                console.log('[ImageGen] Raw Replicate output:', JSON.stringify(output));
+            } catch (err) {
+                console.error('[ImageGen] Replicate API error:', err);
+                if (err && typeof err === 'object' && 'message' in err) {
+                    console.error('[ImageGen] Replicate API error message:', (err as any).message);
+                }
+                if (err && typeof err === 'object' && 'stack' in err) {
+                    console.error('[ImageGen] Replicate API error stack:', (err as any).stack);
+                }
+                await ctx.runMutation(internal.image.updateImageStatus, {
+                    imageId: imageRecord._id,
+                    status: "error"
+                });
+                throw new ConvexError("Replicate API error: " + (err && (err as any).message ? (err as any).message : err));
+            }
 
             let cartoonImageUrl: string | undefined = undefined;
             if (typeof output === "string") {
@@ -89,19 +101,20 @@ export const ImageGen = internalAction({
                 imageId: imageRecord._id,
                 cartoonImageUrl: cartoonImageUrl
             });
+            console.log(`[ImageGen] cartoonImageUrl saved to DB: ${cartoonImageUrl}`);
 
             // Deduct credit from user
             await ctx.runMutation(internal.image.deductUserCredit, {
                 userId: args.userId
             });
 
-            console.log(`[ImageGen] Image generation completed successfully`);
+            console.log(`[ImageGen] END for imageUrl: ${args.imageUrl}, cartoonImageUrl: ${cartoonImageUrl}`);
             return imageRecord._id;
 
         } catch (error: any) {
-            console.error("[ImageGen] Error generating content:", error?.message || error);
+            console.error("[ImageGen] ERROR in main try/catch:", error?.message || error);
             if (error?.stack) {
-                console.error("[ImageGen] Error stack:", error.stack);
+                console.error("[ImageGen] ERROR stack:", error.stack);
             }
             // Update status to error
             await ctx.runMutation(internal.image.updateImageStatus, {
