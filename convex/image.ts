@@ -3,7 +3,11 @@ import { internalAction, internalMutation, internalQuery, mutation } from "./_ge
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
-import OpenAI from "openai";
+import Replicate from "replicate";
+
+const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+});
 
 export const ImageGen = internalAction({
     args: {
@@ -14,8 +18,8 @@ export const ImageGen = internalAction({
     handler: async (ctx, args): Promise<Id<"images"> | ConvexError<string>> => {
         console.log(`[ImageGen] Image URL: ${args.imageUrl}`);
 
-        if (!process.env.OPENAI_API_KEY) {
-            throw new ConvexError("API key not configured");
+        if (!process.env.REPLICATE_API_TOKEN) {
+            throw new ConvexError("Replicate API token not configured");
         }
 
         // Find the image record to update status in case of error
@@ -24,65 +28,41 @@ export const ImageGen = internalAction({
         });
 
         try {
-            // Initialize OpenAI with API key
-            const openai = new OpenAI({
-                apiKey: process.env.OPENAI_API_KEY,
-            });
+            // Prepare the input for Replicate
+            const input = {
+                prompt: args.style || "Make this a 90s cartoon", // Use style as prompt, fallback to default
+                input_image: args.imageUrl, // must be a public URL
+                aspect_ratio: "match_input_image",
+                output_format: "jpg",
+                safety_tolerance: 2
+            };
 
-            // Create the prompt for the specific style transformation
-            const prompt = `You are a world-class professional artist specializing in ${args.style} transformations.
-                
-            Your task is to transform the input photograph into a high-quality ${args.style} artwork with these specific requirements:
-                    
-            1. MOST IMPORTANT: Maintain accurate facial likeness - the result MUST look like the exact same person in the photo
-            2. CRITICAL: Preserve the person's racial characteristics and identity without alteration
-            3. Accurately capture distinctive features including: face shape, hairstyle, eyebrows, nose structure, mouth/smile, and facial expression
-            4. Match the person's actual skin tone appropriately
-            5. Include the same clothing/accessories as in the original image
-            6. Keep the background theme consistent with the original
-            7. Use the characteristic ${args.style} aesthetic while preserving the person's identity
-            8. Create a polished, professional result that is instantly recognizable as the same person`;
-
-            // Fetch the image data
-            const imageResponse = await fetch(args.imageUrl);
-            const imageBuffer = await imageResponse.arrayBuffer();
-
-            // Convert to File object with proper metadata that OpenAI expects
-            const file = new File(
-                [new Uint8Array(imageBuffer)],
-                "image.png",
-                { type: "image/png" }
+            // Call Replicate
+            const output = await replicate.run(
+                "black-forest-labs/flux-kontext-pro",
+                { input }
             );
 
-            // Call OpenAI's image generation API with the source image
-            const response = await openai.images.edit({
-                model: "gpt-image-1",
-                image: [file],  // Pass an array containing the File object
-                prompt: prompt,
-            });
+            // output is a string (URL) or array of URLs, take the first if array
+            const cartoonImageUrl = Array.isArray(output) ? output[0] : output;
 
-            // Get the base64 image data from response
-            const imageData = response.data?.[0].b64_json;
-            if (!imageData) {
+            if (!cartoonImageUrl) {
                 if (imageRecord) {
                     await ctx.runMutation(internal.image.updateImageStatus, {
                         imageId: imageRecord._id,
                         status: "error",
-                        errorMessage: "No image data found in response"
+                        errorMessage: "No image data found in Replicate response"
                     });
                 }
-                return new ConvexError("No image data found in response");
+                return new ConvexError("No image data found in Replicate response");
             }
 
-            // Format the image data with proper data URL prefix
-            const processedImageData = `data:image/png;base64,${imageData}`;
-
-            // Call a mutation to store the image in the database
+            // Store the cartoon image URL in your DB as before
             const imageId: Id<"images"> = await ctx.runMutation(internal.image.storeCartoonImage, {
                 userId: args.userId,
                 originalStorageId: args.imageUrl,
                 originalImageUrl: args.imageUrl,
-                cartoonImageData: processedImageData,
+                cartoonImageData: cartoonImageUrl, // store the URL
             });
 
             return imageId;
