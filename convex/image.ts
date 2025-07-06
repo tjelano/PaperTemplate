@@ -57,19 +57,24 @@ export const ImageGen = internalAction({
                 { input }
             );
 
+            // Log the raw output for debugging
+            console.log('[ImageGen] Raw Replicate output:', JSON.stringify(output));
+
+            let cartoonImageUrl: string | undefined = undefined;
             if (typeof output === "string") {
-                console.log(`[ImageGen] Replicate response URL: ${output}`);
+                cartoonImageUrl = output;
             } else if (Array.isArray(output)) {
-                console.log(`[ImageGen] Replicate response array, first URL: ${output[0]}`);
-            } else {
-                console.log(`[ImageGen] Replicate response: [complex object, not logged]`);
+                cartoonImageUrl = output[0];
+            } else if (output && typeof output === "object" && (output as any).output) {
+                if (typeof (output as any).output === "string") {
+                    cartoonImageUrl = (output as any).output;
+                } else if (Array.isArray((output as any).output)) {
+                    cartoonImageUrl = (output as any).output[0];
+                }
             }
 
-            // output is a string (URL) or array of URLs, take the first if array
-            const cartoonImageUrl = Array.isArray(output) ? output[0] : output;
-
             if (!cartoonImageUrl || typeof cartoonImageUrl !== 'string') {
-                console.error(`[ImageGen] Invalid response from Replicate: type=${typeof output}`);
+                console.error("[ImageGen] Could not extract cartoonImageUrl from Replicate output:", output);
                 await ctx.runMutation(internal.image.updateImageStatus, {
                     imageId: imageRecord._id,
                     status: "error"
