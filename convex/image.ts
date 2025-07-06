@@ -49,7 +49,7 @@ export const ImageGen = internalAction({
                 safety_tolerance: 2
             };
 
-            console.log(`[ImageGen] Calling Replicate with input:`, input);
+            console.log(`[ImageGen] Calling Replicate with input prompt: ${input.prompt}`);
 
             // Call FLUX.1 Kontext Pro model
             const output = await replicate.run(
@@ -57,13 +57,19 @@ export const ImageGen = internalAction({
                 { input }
             );
 
-            console.log(`[ImageGen] Replicate response:`, output);
+            if (typeof output === "string") {
+                console.log(`[ImageGen] Replicate response URL: ${output}`);
+            } else if (Array.isArray(output)) {
+                console.log(`[ImageGen] Replicate response array, first URL: ${output[0]}`);
+            } else {
+                console.log(`[ImageGen] Replicate response: [complex object, not logged]`);
+            }
 
             // output is a string (URL) or array of URLs, take the first if array
             const cartoonImageUrl = Array.isArray(output) ? output[0] : output;
 
             if (!cartoonImageUrl || typeof cartoonImageUrl !== 'string') {
-                console.error(`[ImageGen] Invalid response from Replicate:`, output);
+                console.error(`[ImageGen] Invalid response from Replicate: type=${typeof output}`);
                 await ctx.runMutation(internal.image.updateImageStatus, {
                     imageId: imageRecord._id,
                     status: "error"
@@ -88,16 +94,15 @@ export const ImageGen = internalAction({
             return imageRecord._id;
 
         } catch (error: any) {
-            console.error("[ImageGen] Error generating image:", error);
-            console.error("[ImageGen] Error details:", error?.message || "Unknown error");
-            console.error("[ImageGen] Error stack:", error?.stack || "No stack trace");
-
+            console.error("[ImageGen] Error generating content:", error?.message || error);
+            if (error?.stack) {
+                console.error("[ImageGen] Error stack:", error.stack);
+            }
             // Update status to error
             await ctx.runMutation(internal.image.updateImageStatus, {
                 imageId: imageRecord._id,
                 status: "error"
             });
-
             throw new ConvexError(`Failed to generate image: ${error?.message || "Unknown error"}`);
         }
     }
