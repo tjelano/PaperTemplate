@@ -28,26 +28,20 @@ export const ImageGen = internalAction({
         });
 
         try {
-            // Strictly follow Replicate model requirements
-            // Use a descriptive prompt, not just a style name
-            const prompt = args.style && args.style.trim().length > 0
-                ? `Make this a 90s cartoon of the person, keeping facial features and composition. Style: ${args.style}`
-                : "Make this a 90s cartoon of the person, keeping facial features and composition.";
-
+            // Prepare the input for Replicate
             const input = {
-                prompt,
-                input_image: args.imageUrl, // Must be a public URL
+                prompt: args.style || "Make this a 90s cartoon", // Use style as prompt, fallback to default
+                input_image: args.imageUrl, // must be a public URL
                 aspect_ratio: "match_input_image",
                 output_format: "jpg",
                 safety_tolerance: 2
             };
 
-            console.log("[ImageGen] Replicate input:", input);
+            // Call Replicate
             const output = await replicate.run(
                 "black-forest-labs/flux-kontext-pro",
                 { input }
             );
-            console.log("[ImageGen] Replicate output:", output);
 
             // output is a string (URL) or array of URLs, take the first if array
             const cartoonImageUrl = Array.isArray(output) ? output[0] : output;
@@ -75,10 +69,6 @@ export const ImageGen = internalAction({
 
         } catch (error: any) {
             console.error("[ImageGen] Error generating content:", error);
-            if (error?.response) {
-                // Log Replicate API error details if available
-                console.error("[ImageGen] Replicate API error response:", error.response.data);
-            }
             console.error("[ImageGen] Error details:", error?.message || "Unknown error");
             console.error("[ImageGen] Error stack:", error?.stack || "No stack trace");
             console.error("[ImageGen] Failed to generate or store image after all processing");
