@@ -52,10 +52,12 @@ export const ImageGen = internalAction({
 
             let output;
             try {
+                console.log('[ImageGen] About to call Replicate.run...');
                 output = await replicate.run(
                     "black-forest-labs/flux-kontext-pro",
                     { input }
                 );
+                console.log('[ImageGen] Replicate.run finished');
                 // Safe logging of output
                 if (typeof output === "string" || Array.isArray(output)) {
                     console.log('[ImageGen] Raw Replicate output:', output);
