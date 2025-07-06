@@ -56,12 +56,17 @@ export const ImageGen = internalAction({
                     "black-forest-labs/flux-kontext-pro",
                     { input }
                 );
-                console.log('[ImageGen] Raw Replicate output:', JSON.stringify(output));
-            } catch (err) {
-                console.error('[ImageGen] Replicate API error:', err);
-                if (err && typeof err === 'object' && 'message' in err) {
-                    console.error('[ImageGen] Replicate API error message:', (err as any).message);
+                // Safe logging of output
+                if (typeof output === "string" || Array.isArray(output)) {
+                    console.log('[ImageGen] Raw Replicate output:', output);
+                } else if (output && typeof output === "object") {
+                    console.log('[ImageGen] Raw Replicate output keys:', Object.keys(output));
+                    if ('output' in output) {
+                        console.log('[ImageGen] output.output:', (output as any).output);
+                    }
                 }
+            } catch (err) {
+                console.error('[ImageGen] Replicate API error:', err && (err as any).message ? (err as any).message : err);
                 if (err && typeof err === 'object' && 'stack' in err) {
                     console.error('[ImageGen] Replicate API error stack:', (err as any).stack);
                 }
