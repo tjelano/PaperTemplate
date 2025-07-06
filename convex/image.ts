@@ -15,7 +15,7 @@ export const ImageGen = internalAction({
         userId: v.string(),
         style: v.string(),
     },
-    handler: async (ctx, args): Promise<Id<"images"> | ConvexError<string>> => {
+    handler: async (ctx, args): Promise<Id<"images">> => {
         console.log(`[ImageGen] START for imageUrl: ${args.imageUrl}, userId: ${args.userId}, style: ${args.style}`);
 
         if (!process.env.REPLICATE_API_TOKEN) {
@@ -58,48 +58,60 @@ export const ImageGen = internalAction({
                     { input }
                 );
                 console.log('[ImageGen] Replicate.run finished');
-                // Safe logging of output
-                if (typeof output === "string" || Array.isArray(output)) {
-                    console.log('[ImageGen] Raw Replicate output:', output);
-                } else if (output && typeof output === "object") {
-                    console.log('[ImageGen] Raw Replicate output keys:', Object.keys(output));
-                    if ('output' in output) {
-                        console.log('[ImageGen] output.output:', (output as any).output);
-                    }
+                
+                // According to Replicate docs, output should be a string URL directly
+                console.log('[ImageGen] Output type:', typeof output);
+                console.log('[ImageGen] Output is array:', Array.isArray(output));
+                
+                // Don't try to JSON.stringify the output as it may have circular references
+                if (typeof output === "string") {
+                    console.log('[ImageGen] Output is string URL:', output);
+                } else if (Array.isArray(output)) {
+                    console.log('[ImageGen] Output is array with length:', output.length);
+                    console.log('[ImageGen] First item type:', typeof output[0]);
+                } else {
+                    console.log('[ImageGen] Output is object with keys:', output ? Object.keys(output) : 'null');
                 }
+                
             } catch (err) {
-                console.error('[ImageGen] Replicate API error message:', err && (err as any).message ? (err as any).message : err);
-                if (err && typeof err === 'object' && 'stack' in err) {
-                    console.error('[ImageGen] Replicate API error stack:', (err as any).stack);
-                }
-                if (err && typeof err === 'object') {
-                    console.error('[ImageGen] Replicate API error keys:', Object.keys(err));
+                console.error('[ImageGen] Replicate API error:', err instanceof Error ? err.message : 'Unknown error');
+                if (err instanceof Error && err.stack) {
+                    console.error('[ImageGen] Error stack:', err.stack);
                 }
                 await ctx.runMutation(internal.image.updateImageStatus, {
                     imageId: imageRecord._id,
                     status: "error"
                 });
-                throw new ConvexError("Replicate API error: " + (err && (err as any).message ? (err as any).message : err));
+                throw new ConvexError("Replicate API error: " + (err instanceof Error ? err.message : 'Unknown error'));
             }
 
-            // Log output type and keys before extraction
-            console.log('[ImageGen] About to extract cartoonImageUrl. Output type:', typeof output, 'Is array:', Array.isArray(output), 'Keys:', output && typeof output === 'object' ? Object.keys(output) : undefined);
-
+            // Extract the cartoon image URL from the output
+            // According to Replicate docs, the output should be a string URL directly
             let cartoonImageUrl: string | undefined = undefined;
+            
             if (typeof output === "string") {
                 cartoonImageUrl = output;
-            } else if (Array.isArray(output)) {
-                cartoonImageUrl = output[0];
-            } else if (output && typeof output === "object" && (output as any).output) {
-                if (typeof (output as any).output === "string") {
-                    cartoonImageUrl = (output as any).output;
-                } else if (Array.isArray((output as any).output)) {
-                    cartoonImageUrl = (output as any).output[0];
+            } else if (Array.isArray(output) && output.length > 0) {
+                // If it's an array, take the first item
+                cartoonImageUrl = typeof output[0] === "string" ? output[0] : undefined;
+            } else if (output && typeof output === "object") {
+                // If it's an object, try to extract from common properties
+                const outputObj = output as any;
+                if (outputObj.output && typeof outputObj.output === "string") {
+                    cartoonImageUrl = outputObj.output;
+                } else if (Array.isArray(outputObj.output) && outputObj.output.length > 0) {
+                    cartoonImageUrl = typeof outputObj.output[0] === "string" ? outputObj.output[0] : undefined;
                 }
             }
 
             if (!cartoonImageUrl || typeof cartoonImageUrl !== 'string') {
-                console.error("[ImageGen] Could not extract cartoonImageUrl from Replicate output:", output);
+                console.error("[ImageGen] Could not extract cartoonImageUrl from Replicate output");
+                console.error("[ImageGen] Output type:", typeof output);
+                console.error("[ImageGen] Output is array:", Array.isArray(output));
+                if (output && typeof output === "object") {
+                    console.error("[ImageGen] Output keys:", Object.keys(output));
+                }
+                
                 await ctx.runMutation(internal.image.updateImageStatus, {
                     imageId: imageRecord._id,
                     status: "error"
@@ -114,14 +126,14 @@ export const ImageGen = internalAction({
                 imageId: imageRecord._id,
                 cartoonImageUrl: cartoonImageUrl
             });
-            console.log(`[ImageGen] cartoonImageUrl saved to DB: ${cartoonImageUrl}`);
+            console.log(`[ImageGen] Successfully updated image record with cartoon URL`);
 
             // Deduct credit from user
             await ctx.runMutation(internal.image.deductUserCredit, {
                 userId: args.userId
             });
 
-            console.log(`[ImageGen] END for imageUrl: ${args.imageUrl}, cartoonImageUrl: ${cartoonImageUrl}`);
+            console.log(`[ImageGen] SUCCESS - Image processing completed for imageUrl: ${args.imageUrl}`);
             return imageRecord._id;
 
         } catch (error: any) {
