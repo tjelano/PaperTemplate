@@ -68,7 +68,7 @@ export const ImageGen = internalAction({
                     imageId: imageRecord._id,
                     status: "error"
                 });
-                return new ConvexError("Invalid response from image generation model");
+                throw new ConvexError("Invalid response from image generation model");
             }
 
             console.log(`[ImageGen] Generated cartoon image URL: ${cartoonImageUrl}`);
@@ -98,7 +98,7 @@ export const ImageGen = internalAction({
                 status: "error"
             });
 
-            return new ConvexError(`Failed to generate image: ${error?.message || "Unknown error"}`);
+            throw new ConvexError(`Failed to generate image: ${error?.message || "Unknown error"}`);
         }
     }
 });
