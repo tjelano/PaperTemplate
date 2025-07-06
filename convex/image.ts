@@ -66,9 +66,12 @@ export const ImageGen = internalAction({
                     }
                 }
             } catch (err) {
-                console.error('[ImageGen] Replicate API error:', err && (err as any).message ? (err as any).message : err);
+                console.error('[ImageGen] Replicate API error message:', err && (err as any).message ? (err as any).message : err);
                 if (err && typeof err === 'object' && 'stack' in err) {
                     console.error('[ImageGen] Replicate API error stack:', (err as any).stack);
+                }
+                if (err && typeof err === 'object') {
+                    console.error('[ImageGen] Replicate API error keys:', Object.keys(err));
                 }
                 await ctx.runMutation(internal.image.updateImageStatus, {
                     imageId: imageRecord._id,
@@ -76,6 +79,9 @@ export const ImageGen = internalAction({
                 });
                 throw new ConvexError("Replicate API error: " + (err && (err as any).message ? (err as any).message : err));
             }
+
+            // Log output type and keys before extraction
+            console.log('[ImageGen] About to extract cartoonImageUrl. Output type:', typeof output, 'Is array:', Array.isArray(output), 'Keys:', output && typeof output === 'object' ? Object.keys(output) : undefined);
 
             let cartoonImageUrl: string | undefined = undefined;
             if (typeof output === "string") {
